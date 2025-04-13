@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import ErrorBoundary from './components/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 // Layout Components
 import Sidebar from './components/layout/Sidebar';
@@ -238,6 +239,7 @@ function App() {
               } />
             </Routes>
           </Router>
+          <SpeedInsights />
         </AuthProvider>
       </ToastProvider>
     </ErrorBoundary>
