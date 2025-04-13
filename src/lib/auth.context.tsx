@@ -70,14 +70,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
   }, []);
 
-  // Função para obter a URL base do aplicativo (produção ou desenvolvimento)
+  // Função para obter a URL base do aplicativo (sempre a URL de produção)
   const getBaseUrl = () => {
-    // Se estiver em produção (Vercel), use a URL de produção
-    if (window.location.hostname !== 'localhost') {
-      return window.location.origin;
-    }
-    // Em desenvolvimento, use localhost
-    return 'http://localhost:5173';
+    // Sempre usar a URL de produção para redirecionamentos
+    return window.location.origin;
   };
 
   const signIn = async (email: string, password: string) => {
