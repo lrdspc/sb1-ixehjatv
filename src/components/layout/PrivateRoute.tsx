@@ -7,7 +7,7 @@ interface PrivateRouteProps {
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
-  const { session, loading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
 
   // Mostrar um indicador de carregamento enquanto verificamos a autenticação
@@ -19,8 +19,8 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
     );
   }
 
-  // Só redirecionar para login se tivermos certeza que não há sessão
-  if (!session) {
+  // Redirecionar para login se não estiver autenticado
+  if (!isAuthenticated) {
     // Usar o state para passar a localização original, permitindo redirecionamento após login
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
