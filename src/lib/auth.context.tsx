@@ -70,6 +70,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
   }, []);
 
+  // Função para obter a URL base do aplicativo (produção ou desenvolvimento)
+  const getBaseUrl = () => {
+    // Se estiver em produção (Vercel), use a URL de produção
+    if (window.location.hostname !== 'localhost') {
+      return window.location.origin;
+    }
+    // Em desenvolvimento, use localhost
+    return 'http://localhost:5173';
+  };
+
   const signIn = async (email: string, password: string) => {
     try {
       setError(null);
@@ -120,12 +130,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Email, senha e nome completo são obrigatórios');
       }
       
+      const baseUrl = getBaseUrl();
+      
       // Registrar o usuário no Supabase Auth com os dados do perfil nos metadados
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/login`,
+          emailRedirectTo: `${baseUrl}/login`,
           data: {
             full_name: fullName,
             role: 'technician'
@@ -208,8 +220,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error('Email é obrigatório');
       }
       
+      const baseUrl = getBaseUrl();
+      
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${baseUrl}/reset-password`,
       });
       
       if (error) throw error;
