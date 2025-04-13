@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate, Link, useLocation } from 'react-router-dom';
 import { Zap, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../../lib/auth.context';
@@ -10,13 +10,24 @@ const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  // Extrair o caminho de redirecionamento do state, se existir
+  const from = location.state?.from || '/';
+
+  // Efeito para redirecionar após login bem-sucedido
+  useEffect(() => {
+    if (session) {
+      navigate(from, { replace: true });
+    }
+  }, [session, navigate, from]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await signIn(email, password);
   };
 
+  // Evitar redirecionamento duplo - deixar o useEffect lidar com isso
   if (session) {
-    return <Navigate to="/" replace />;
+    return null;
   }
 
   return (
@@ -70,9 +81,16 @@ const Login: React.FC = () => {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Senha
-              </label>
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                  Senha
+                </label>
+                <div className="text-sm">
+                  <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+                    Esqueceu a senha?
+                  </Link>
+                </div>
+              </div>
               <div className="mt-1 relative rounded-md shadow-sm">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />

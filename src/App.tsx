@@ -5,6 +5,7 @@ import PrivateRoute from './components/layout/PrivateRoute';
 import UserMenu from './components/layout/UserMenu';
 import InstallPWA from './components/ui/InstallPWA';
 import OfflineIndicator from './components/ui/OfflineIndicator';
+import UpdateNotification from './components/ui/UpdateNotification';
 import { initSync } from './lib/sync.service';
 import { initDB } from './lib/db';
 import { 
@@ -20,7 +21,6 @@ import { ToastProvider } from './components/ui/Toast';
 // Layout Components
 import Sidebar from './components/layout/Sidebar';
 import MobileMenu from './components/layout/MobileMenu';
-import LazyLoad from './components/LazyLoad';
 
 // Lazy loaded pages
 const Login = lazy(() => import('./pages/auth/Login'));
@@ -36,6 +36,8 @@ const ReviewAndFinalize = lazy(() => import('./pages/inspection/ReviewAndFinaliz
 const Reports = lazy(() => import('./pages/Reports'));
 const Clients = lazy(() => import('./pages/Clients'));
 const Calendar = lazy(() => import('./pages/Calendar'));
+const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
 
 // Import skeletons
 import DashboardSkeleton from './components/skeletons/DashboardSkeleton';
@@ -73,6 +75,16 @@ function App() {
               <Route path="/register" element={
                 <Suspense fallback={<CardSkeleton />}>
                   <Register />
+                </Suspense>
+              } />
+              <Route path="/forgot-password" element={
+                <Suspense fallback={<CardSkeleton />}>
+                  <ForgotPassword />
+                </Suspense>
+              } />
+              <Route path="/reset-password" element={
+                <Suspense fallback={<CardSkeleton />}>
+                  <ResetPassword />
                 </Suspense>
               } />
               <Route path="/*" element={
@@ -221,6 +233,7 @@ function App() {
                   </div>
                   <InstallPWA />
                   <OfflineIndicator />
+                  <UpdateNotification />
                 </PrivateRoute>
               } />
             </Routes>

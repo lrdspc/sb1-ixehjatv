@@ -10,6 +10,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
   const { session, loading } = useAuth();
   const location = useLocation();
 
+  // Mostrar um indicador de carregamento enquanto verificamos a autenticação
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -18,8 +19,10 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
     );
   }
 
+  // Só redirecionar para login se tivermos certeza que não há sessão
   if (!session) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    // Usar o state para passar a localização original, permitindo redirecionamento após login
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   return <>{children}</>;
