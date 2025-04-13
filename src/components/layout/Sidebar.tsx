@@ -9,7 +9,8 @@ import {
   HelpCircle, 
   FilePlus,
   FileText,
-  RefreshCw
+  RefreshCw,
+  Database
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -25,6 +26,7 @@ const Sidebar = () => {
   const secondaryNavigation = [
     { name: 'Central de Ajuda', icon: HelpCircle, path: '/ajuda' },
     { name: 'Configurações', icon: Settings, path: '/configuracoes' },
+    { name: 'Teste Supabase', icon: Database, path: '/supabase-test' },
   ];
 
   return (

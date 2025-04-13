@@ -18,6 +18,7 @@ import {
 import ErrorBoundary from './components/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import SupabaseTest from './components/SupabaseTest';
 
 // Layout Components
 import Sidebar from './components/layout/Sidebar';
@@ -221,6 +222,11 @@ function App() {
                           <Route path="/calendario" element={
                             <Suspense fallback={<CardSkeleton />}>
                               <Calendar />
+                            </Suspense>
+                          } />
+                          <Route path="/supabase-test" element={
+                            <Suspense fallback={<CardSkeleton />}>
+                              <SupabaseTest />
                             </Suspense>
                           } />
                         </Routes>
