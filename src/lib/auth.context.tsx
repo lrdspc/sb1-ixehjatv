@@ -72,8 +72,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Função para obter a URL base do aplicativo (sempre a URL de produção)
   const getBaseUrl = () => {
-    // Sempre usar a URL de produção para redirecionamentos
-    return window.location.origin;
+    // Usar o domínio de produção configurado
+    return 'https://projeto-one.lrds.me';
   };
 
   const signIn = async (email: string, password: string) => {
