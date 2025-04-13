@@ -3,19 +3,45 @@ import { supabase } from './supabase';
 // Função para listar todas as tabelas no esquema public
 export async function listTables() {
   try {
-    // Consulta para listar todas as tabelas no esquema public
-    const { data, error } = await supabase
-      .from('pg_tables')
-      .select('tablename')
-      .eq('schemaname', 'public');
+    // Em vez de consultar pg_tables, vamos listar as tabelas que sabemos que existem
+    // com base no nosso schema SQL
+    const knownTables = [
+      'users_profiles',
+      'clients',
+      'inspections',
+      'inspection_tiles',
+      'nonconformities',
+      'inspection_photos'
+    ];
     
-    if (error) {
-      console.error('Erro ao listar tabelas:', error);
-      return { success: false, error: error.message };
-    }
+    // Verificar quais tabelas existem tentando fazer uma consulta count
+    const tableResults = await Promise.all(
+      knownTables.map(async (tableName) => {
+        try {
+          const { count, error } = await supabase
+            .from(tableName)
+            .select('*', { count: 'exact', head: true });
+          
+          return {
+            tablename: tableName,
+            exists: !error,
+            count: count || 0
+          };
+        } catch (e) {
+          return {
+            tablename: tableName,
+            exists: false,
+            count: 0
+          };
+        }
+      })
+    );
     
-    console.log('Tabelas encontradas:', data);
-    return { success: true, tables: data };
+    // Filtrar apenas as tabelas que existem
+    const existingTables = tableResults.filter(table => table.exists);
+    
+    console.log('Tabelas encontradas:', existingTables);
+    return { success: true, tables: existingTables };
   } catch (err) {
     console.error('Exceção ao listar tabelas:', err);
     return { 

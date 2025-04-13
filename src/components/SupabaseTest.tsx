@@ -9,6 +9,7 @@ const SupabaseTest: React.FC = () => {
   const [clientCount, setClientCount] = useState<number | null>(null);
   const [testClient, setTestClient] = useState<any>(null);
   const [testUser, setTestUser] = useState<any>(null);
+  const [userMessage, setUserMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -81,10 +82,14 @@ const SupabaseTest: React.FC = () => {
   const addTestUser = async () => {
     setLoading(true);
     setError(null);
+    setUserMessage(null);
     try {
       const result = await createTestUser();
       if (result.success && result.user) {
         setTestUser(result.user);
+        if (result.message) {
+          setUserMessage(result.message);
+        }
       } else {
         setError(result.error || 'Erro ao criar usuário de teste');
       }
@@ -136,7 +141,9 @@ const SupabaseTest: React.FC = () => {
               <p className="font-medium">Tabelas encontradas: {tables.length}</p>
               <ul className="list-disc pl-5 mt-1">
                 {tables.map((table, index) => (
-                  <li key={index}>{table.tablename}</li>
+                  <li key={index}>
+                    {table.tablename} <span className="text-gray-500">({table.count} registros)</span>
+                  </li>
                 ))}
               </ul>
             </div>
@@ -191,6 +198,11 @@ const SupabaseTest: React.FC = () => {
               <p className="mt-1">Email: <span className="font-mono">{testUser.email}</span></p>
               <p>Senha: <span className="font-mono">{testUser.password}</span></p>
               <p>Nome: <span className="font-mono">{testUser.fullName}</span></p>
+              {userMessage && (
+                <p className="mt-2 text-sm text-blue-600 font-medium">
+                  {userMessage}
+                </p>
+              )}
               <p className="mt-2 text-sm text-gray-600">
                 Use essas credenciais para fazer login no sistema.
               </p>
