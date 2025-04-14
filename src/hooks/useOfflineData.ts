@@ -5,9 +5,10 @@ import {
   getAllItems, 
   updateItem, 
   deleteItem,
-  addToSyncQueue
-} from '../lib/db';
-import { syncEvents, isOnline } from '../lib/sync.service';
+  addToSyncQueue,
+  syncEvents,
+  isOnline
+} from '../lib';
 
 // Generic hook for offline data management
 export function useOfflineData<T>(

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useAuth } from '@clerk/clerk-react';
-import { setSupabaseToken } from '../lib/supabase';
+import { setSupabaseToken } from '../lib';
 
 /**
  * Componente para integrar Clerk com Supabase

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, Plus, Filter, UserPlus, Building2, MapPin, Phone, Edit, Trash2 } from 'lucide-react';
 import { useClients } from '../hooks/useClients';
 import ClientModal from '../components/clients/ClientModal';
-import type { Database } from '../lib/database.types';
+import type { Database } from '../lib';
 
 type Client = Database['public']['Tables']['clients']['Row'];
 type InsertClient = Database['public']['Tables']['clients']['Insert'];

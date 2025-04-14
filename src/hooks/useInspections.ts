@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { inspectionQueries } from '../lib/supabase-queries';
-import { handleError } from '../lib/error-handler';
+import { inspectionQueries } from '../lib';
+import { handleError } from '../lib';
 import { Inspection, InsertInspection, UpdateInspection } from '../types/inspections';
 
 export function useInspections() {

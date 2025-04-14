@@ -1,10 +1,9 @@
 import { useState, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
-import type { Database } from '../lib/database.types';
+import { supabase, Database } from '../lib';
 
-type Client = Database['public']['Tables']['clients']['Row'];
-type InsertClient = Database['public']['Tables']['clients']['Insert'];
-type UpdateClient = Database['public']['Tables']['clients']['Update'];
+type ClientRow = Database['public']['Tables']['clients']['Row'];
+type ClientInsert = Database['public']['Tables']['clients']['Insert'];
+type ClientUpdate = Database['public']['Tables']['clients']['Update'];
 
 export function useClients() {
   const [loading, setLoading] = useState(false);
@@ -77,7 +76,7 @@ export function useClients() {
     }
   }, []);
 
-  const createClient = useCallback(async (client: InsertClient) => {
+  const createClient = useCallback(async (client: ClientInsert) => {
     try {
       setLoading(true);
       setError(null);
@@ -100,7 +99,7 @@ export function useClients() {
     }
   }, []);
 
-  const updateClient = useCallback(async (id: string, updates: UpdateClient) => {
+  const updateClient = useCallback(async (id: string, updates: ClientUpdate) => {
     try {
       setLoading(true);
       setError(null);

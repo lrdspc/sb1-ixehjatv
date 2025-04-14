@@ -1,26 +1,32 @@
-import { useCallback, useState, useEffect } from 'react';
-import { supabase, handleSupabaseError } from '../lib/supabase';
+import { useState, useEffect, useCallback } from 'react';
+import { supabase, handleSupabaseError } from '../lib';
 import { useAuth } from '../lib/auth.context';
 
 export function useSupabase() {
   const { isAuthenticated } = useAuth();
   const [isConnected, setIsConnected] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState(false);
 
   // Verificar conexão com o Supabase
   useEffect(() => {
-    const checkConnection = async () => {
+    const checkConnection = useCallback(async () => {
       try {
-        const { data, error } = await supabase
+        setLoading(true);
+        const { error } = await supabase
           .from('clients')
           .select('id')
           .limit(1);
         
-        setIsConnected(error ? false : true);
+        if (error) throw error;
+        
+        setIsConnected(true);
       } catch (err) {
         console.error('Erro ao verificar conexão com o Supabase:', err);
         setIsConnected(false);
+      } finally {
+        setLoading(false);
       }
-    };
+    }, []);
 
     if (isAuthenticated) {
       checkConnection();
@@ -189,6 +195,7 @@ export function useSupabase() {
     updateData,
     deleteData,
     uploadFile,
-    supabase
+    supabase,
+    loading
   };
 } 
