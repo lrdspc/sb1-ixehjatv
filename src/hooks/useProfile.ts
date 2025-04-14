@@ -1,42 +1,31 @@
-import { useState, useCallback, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { useAuth } from '../lib/auth.context';
-import type { Database } from '../lib/database.types';
-
-type Profile = Database['public']['Tables']['users_profiles']['Row'];
+import { useState, useEffect } from 'react';
+import { useUser } from '@clerk/clerk-react';
 
 export function useProfile() {
-  const { user } = useAuth();
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const { user } = useUser();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const getProfile = useCallback(async () => {
+  useEffect(() => {
     try {
-      if (!user) return null;
-      
-      const { data, error } = await supabase
-        .from('users_profiles')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-      
-      if (error) throw error;
-      
-      setProfile(data);
-      return data;
+      setLoading(false);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Erro ao buscar perfil';
       setError(message);
-      return null;
-    } finally {
       setLoading(false);
     }
   }, [user]);
 
-  useEffect(() => {
-    getProfile();
-  }, [getProfile]);
-
-  return { profile, loading, error, getProfile };
+  return { 
+    profile: user ? {
+      id: user.id,
+      email: user.primaryEmailAddress?.emailAddress,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      imageUrl: user.imageUrl
+    } : null,
+    loading,
+    error,
+    getProfile: () => Promise.resolve(user)
+  };
 }
