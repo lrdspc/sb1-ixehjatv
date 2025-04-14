@@ -12,8 +12,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Criar o cliente Supabase com configurações otimizadas
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: false, // Não persistir sessão, pois usamos Clerk
-    autoRefreshToken: false // Não atualizar tokens automaticamente
+    persistSession: true, // Persistir sessão no localStorage
+    autoRefreshToken: true, // Atualizar tokens automaticamente
+    storageKey: 'brasilit-auth-token'
   },
   realtime: {
     params: {
@@ -23,24 +24,12 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   global: {
     headers: {
       'x-application-name': 'brasilit-inspection-app'
-    },
-    fetch: fetch.bind(globalThis)
+    }
   },
   db: {
     schema: 'public'
   }
 });
-
-// Função para definir o token JWT do Clerk no Supabase
-export async function setSupabaseToken(token: string | null) {
-  if (token) {
-    // Definir o token JWT do Clerk como header de autorização para o Supabase
-    supabase.auth.setSession({
-      access_token: token,
-      refresh_token: token
-    });
-  }
-}
 
 // Função para verificar a conexão com o Supabase
 export async function checkSupabaseConnection(): Promise<boolean> {
@@ -62,8 +51,14 @@ export async function checkSupabaseConnection(): Promise<boolean> {
   }
 }
 
-// Função auxiliar para lidar com erros do Supabase
-export function handleSupabaseError(error: unknown, message = 'Erro na operação'): never {
-  console.error(`${message}:`, error);
-  throw new Error(`${message}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+// Função para verificar se o usuário está autenticado
+export async function isAuthenticated(): Promise<boolean> {
+  const { data: { session } } = await supabase.auth.getSession();
+  return !!session;
+}
+
+// Função para obter o usuário atual
+export async function getCurrentUser() {
+  const { data: { user } } = await supabase.auth.getUser();
+  return user;
 }
