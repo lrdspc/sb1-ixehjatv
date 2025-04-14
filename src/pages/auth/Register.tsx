@@ -35,7 +35,6 @@ const Register: React.FC = () => {
         const { error: profile_error } = await supabase
           .from('users_profiles')
           .insert({
-            id: auth_data.user.id,
             user_id: auth_data.user.id,
             full_name
           });
@@ -50,6 +49,7 @@ const Register: React.FC = () => {
         });
       }
     } catch (err) {
+      console.error('Erro no registro:', err);
       set_error(err instanceof Error ? err.message : 'Erro ao criar conta');
     } finally {
       set_loading(false);
