@@ -7,6 +7,7 @@ import { resolve } from 'path';
 export default defineConfig(({ mode }) => {
   // Carregar variáveis de ambiente com base no modo
   const env = loadEnv(mode, process.cwd(), '');
+  const isPWA = mode === 'pwa';
   
   return {
     plugins: [
@@ -15,33 +16,122 @@ export default defineConfig(({ mode }) => {
         registerType: 'autoUpdate',
         includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
         manifest: {
-          name: 'Brasilit Inspection App',
+          name: 'Brasilit - Sistema de Vistorias',
           short_name: 'Brasilit',
-          description: 'App de inspeção de coberturas Brasilit',
+          description: 'Sistema de vistorias técnicas para coberturas',
           theme_color: '#2563eb',
           background_color: '#f3f4f6',
           display: 'standalone',
+          orientation: 'any',
+          start_url: '/?source=pwa',
+          scope: '/',
+          categories: ["business", "productivity", "utilities"],
           icons: [
             {
-              src: '/icons/icon-192x192.png',
-              sizes: '192x192',
+              src: '/icons/icon-72x72.png',
+              sizes: '72x72',
               type: 'image/png'
             },
             {
-              src: '/icons/icon-512x512.png',
-              sizes: '512x512',
+              src: '/icons/icon-96x96.png',
+              sizes: '96x96',
+              type: 'image/png'
+            },
+            {
+              src: '/icons/icon-128x128.png',
+              sizes: '128x128',
+              type: 'image/png'
+            },
+            {
+              src: '/icons/icon-144x144.png',
+              sizes: '144x144',
+              type: 'image/png'
+            },
+            {
+              src: '/icons/icon-192x192.png',
+              sizes: '192x192',
+              type: 'image/png',
+              purpose: 'any maskable'
+            },
+            {
+              src: '/icons/icon-384x384.png',
+              sizes: '384x384',
               type: 'image/png'
             },
             {
               src: '/icons/icon-512x512.png',
               sizes: '512x512',
               type: 'image/png',
-              purpose: 'maskable'
+              purpose: 'any maskable'
             }
-          ]
+          ],
+          screenshots: [
+            {
+              src: '/screenshots/desktop.png',
+              sizes: '1280x720',
+              type: 'image/png',
+              form_factor: 'wide',
+              label: 'Tela principal do sistema'
+            },
+            {
+              src: '/screenshots/mobile.png',
+              sizes: '750x1334', 
+              type: 'image/png',
+              form_factor: 'narrow',
+              label: 'Versão mobile'
+            }
+          ],
+          shortcuts: [
+            {
+              name: 'Nova Vistoria',
+              url: '/new-inspection',
+              description: 'Iniciar nova vistoria',
+              icons: [
+                {
+                  src: '/icons/shortcut-inspection.png',
+                  sizes: '96x96'
+                }
+              ]
+            },
+            {
+              name: 'Relatórios',
+              url: '/reports',
+              description: 'Visualizar relatórios',
+              icons: [
+                {
+                  src: '/icons/shortcut-reports.png',
+                  sizes: '96x96'
+                }
+              ]
+            },
+            {
+              name: 'Clientes',
+              url: '/clients',
+              description: 'Gerenciar clientes',
+              icons: [
+                {
+                  src: '/icons/shortcut-clients.png',
+                  sizes: '96x96'
+                }
+              ]
+            }
+          ],
+          related_applications: [
+            {
+              platform: 'webapp',
+              url: 'https://brasilit-inspection.vercel.app/manifest.json'
+            }
+          ],
+          prefer_related_applications: false
+        },
+        devOptions: {
+          enabled: isPWA,
+          type: 'module',
+          navigateFallback: 'index.html'
         },
         workbox: {
           // Configuração para caching
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg,json,woff,woff2,ttf,eot}'],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -97,8 +187,55 @@ export default defineConfig(({ mode }) => {
                   statuses: [0, 200]
                 }
               }
+            },
+            {
+              // Cache para Clerk API
+              urlPattern: /^https:\/\/clerk\..*\.com\/.*/i,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'clerk-cache',
+                expiration: {
+                  maxEntries: 20,
+                  maxAgeSeconds: 60 * 60 * 12 // 12 horas
+                },
+                networkTimeoutSeconds: 10,
+                cacheableResponse: {
+                  statuses: [0, 200]
+                }
+              }
+            },
+            {
+              // Estratégia para navegação
+              urlPattern: /\/(?:new-inspection|reports|clients|settings|profile)\/?$/,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'navigation-cache',
+                expiration: {
+                  maxEntries: 20,
+                  maxAgeSeconds: 60 * 60 * 24 // 24 horas
+                }
+              }
+            },
+            {
+              // Fallback para navegação offline
+              urlPattern: ({ request }) => request.mode === 'navigate',
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'pages-cache',
+                expiration: {
+                  maxEntries: 30,
+                  maxAgeSeconds: 60 * 60 * 24 // 24 horas
+                },
+                networkTimeoutSeconds: 5
+              }
             }
-          ]
+          ],
+          // Configurações avançadas do Workbox
+          skipWaiting: true,
+          clientsClaim: true,
+          cleanupOutdatedCaches: true,
+          navigateFallback: '/offline.html',
+          navigateFallbackDenylist: [/^\/_/, /\/[^/?]+\.[^/]+$/]
         }
       })
     ],
@@ -115,7 +252,7 @@ export default defineConfig(({ mode }) => {
       minify: 'terser',
       terserOptions: {
         compress: {
-          drop_console: true, // Remover console.logs em produção
+          drop_console: !isPWA, // Manter console.logs no modo PWA para debug
           drop_debugger: true
         }
       },
@@ -129,13 +266,15 @@ export default defineConfig(({ mode }) => {
             ],
             clerk: ['@clerk/clerk-react'],
             supabase: ['@supabase/supabase-js'],
-            ui: ['lucide-react']
+            ui: ['lucide-react', 'framer-motion']
           }
         }
       },
       // Melhorar análise de build
       reportCompressedSize: true,
-      chunkSizeWarningLimit: 1000
+      chunkSizeWarningLimit: 1000,
+      // Gerar source maps em desenvolvimento e modo PWA
+      sourcemap: mode === 'development' || isPWA
     },
     server: {
       port: 5173,

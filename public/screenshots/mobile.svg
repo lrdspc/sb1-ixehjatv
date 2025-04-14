@@ -1,0 +1,29 @@
+<svg width="750" height="1334" xmlns="http://www.w3.org/2000/svg">
+  <rect width="750" height="1334" fill="#f3f4f6"/>
+  <rect x="0" y="0" width="750" height="64" fill="#2563eb"/>
+  <text x="24" y="40" font-family="Arial" font-size="20" font-weight="bold" fill="white">Brasilit</text>
+  
+  <!-- Content area -->
+  <rect x="20" y="84" width="710" height="100" rx="8" fill="white"/>
+  <rect x="40" y="104" width="200" height="24" rx="4" fill="#2563eb" opacity="0.8"/>
+  <rect x="40" y="144" width="670" height="2" fill="#e5e7eb"/>
+  
+  <!-- Cards -->
+  <rect x="20" y="204" width="710" height="180" rx="8" fill="white"/>
+  <rect x="40" y="224" width="120" height="24" rx="4" fill="#2563eb" opacity="0.8"/>
+  <rect x="40" y="264" width="670" height="100" rx="4" fill="#f3f4f6"/>
+  
+  <rect x="20" y="404" width="710" height="180" rx="8" fill="white"/>
+  <rect x="40" y="424" width="120" height="24" rx="4" fill="#2563eb" opacity="0.8"/>
+  <rect x="40" y="464" width="670" height="100" rx="4" fill="#f3f4f6"/>
+  
+  <rect x="20" y="604" width="710" height="180" rx="8" fill="white"/>
+  <rect x="40" y="624" width="120" height="24" rx="4" fill="#2563eb" opacity="0.8"/>
+  <rect x="40" y="664" width="670" height="100" rx="4" fill="#f3f4f6"/>
+  
+  <!-- Bottom navigation -->
+  <rect x="0" y="1270" width="750" height="64" fill="white"/>
+  <circle cx="125" cy="1302" r="20" fill="#2563eb" opacity="0.2"/>
+  <circle cx="375" cy="1302" r="20" fill="#2563eb"/>
+  <circle cx="625" cy="1302" r="20" fill="#2563eb" opacity="0.2"/>
+</svg>

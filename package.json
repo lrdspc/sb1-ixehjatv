@@ -5,9 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run generate-icons && npm run generate-screenshots && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "generate-icons": "node scripts/convert-icons.js",
+    "generate-screenshots": "node scripts/convert-screenshots.js",
+    "pwa:dev": "vite --mode pwa",
+    "pwa:build": "npm run generate-icons && npm run generate-screenshots && vite build --mode pwa",
+    "analyze": "vite build --mode analyze"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.27.0",
@@ -23,6 +28,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
+    "@resvg/resvg-js": "^2.6.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
     "@types/babel__core": "^7.20.5",
@@ -38,6 +44,7 @@
     "@typescript-eslint/parser": "^8.29.1",
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.18",
+    "canvas": "^2.11.2",
     "eslint": "^9.24.0",
     "eslint-config-prettier": "^10.1.2",
     "eslint-import-resolver-typescript": "^4.3.2",
@@ -49,7 +56,9 @@
     "eslint-plugin-tailwindcss": "^3.18.0",
     "globals": "^15.9.0",
     "jest": "^29.7.0",
+    "jsdom": "^24.0.0",
     "postcss": "^8.4.35",
+    "rollup-plugin-visualizer": "^5.12.0",
     "sharp": "^0.34.1",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.5.3",

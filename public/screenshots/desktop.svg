@@ -1,0 +1,39 @@
+<svg width="1280" height="720" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" fill="#f3f4f6"/>
+  <rect x="0" y="0" width="1280" height="64" fill="#2563eb"/>
+  <text x="24" y="40" font-family="Arial" font-size="24" font-weight="bold" fill="white">Brasilit - Sistema de Vistorias</text>
+  
+  <!-- Sidebar -->
+  <rect x="0" y="64" width="240" height="656" fill="white"/>
+  
+  <!-- Content area -->
+  <rect x="260" y="84" width="1000" height="100" rx="8" fill="white"/>
+  <rect x="280" y="104" width="200" height="24" rx="4" fill="#2563eb" opacity="0.8"/>
+  <rect x="280" y="144" width="960" height="2" fill="#e5e7eb"/>
+  
+  <!-- Cards -->
+  <rect x="260" y="204" width="320" height="200" rx="8" fill="white"/>
+  <rect x="280" y="224" width="120" height="24" rx="4" fill="#2563eb" opacity="0.8"/>
+  <rect x="280" y="264" width="280" height="120" rx="4" fill="#f3f4f6"/>
+  
+  <rect x="600" y="204" width="320" height="200" rx="8" fill="white"/>
+  <rect x="620" y="224" width="120" height="24" rx="4" fill="#2563eb" opacity="0.8"/>
+  <rect x="620" y="264" width="280" height="120" rx="4" fill="#f3f4f6"/>
+  
+  <rect x="940" y="204" width="320" height="200" rx="8" fill="white"/>
+  <rect x="960" y="224" width="120" height="24" rx="4" fill="#2563eb" opacity="0.8"/>
+  <rect x="960" y="264" width="280" height="120" rx="4" fill="#f3f4f6"/>
+  
+  <!-- Table -->
+  <rect x="260" y="424" width="1000" height="276" rx="8" fill="white"/>
+  <rect x="280" y="444" width="960" height="40" rx="4" fill="#f9fafb"/>
+  <rect x="280" y="484" width="960" height="2" fill="#e5e7eb"/>
+  <rect x="280" y="486" width="960" height="40" fill="white"/>
+  <rect x="280" y="526" width="960" height="2" fill="#e5e7eb"/>
+  <rect x="280" y="528" width="960" height="40" fill="white"/>
+  <rect x="280" y="568" width="960" height="2" fill="#e5e7eb"/>
+  <rect x="280" y="570" width="960" height="40" fill="white"/>
+  <rect x="280" y="610" width="960" height="2" fill="#e5e7eb"/>
+  <rect x="280" y="612" width="960" height="40" fill="white"/>
+  <rect x="280" y="652" width="960" height="2" fill="#e5e7eb"/>
+</svg>
