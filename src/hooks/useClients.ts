@@ -1,159 +1,59 @@
-import { useState, useCallback } from 'react';
-import { supabase, Database } from '../lib';
-
-type ClientRow = Database['public']['Tables']['clients']['Row'];
-type ClientInsert = Database['public']['Tables']['clients']['Insert'];
-type ClientUpdate = Database['public']['Tables']['clients']['Update'];
+import { useState, useEffect, useCallback } from 'react';
+import { collection, query, orderBy, getDocs } from 'firebase/firestore';
+import { db } from '../lib/firebase';
+import { useAuth } from '../lib/firebase-auth-context';
+import type { FirestoreClient } from '../types/firestore';
+import { getAllClients as getAllOfflineClients } from '../lib/db';
 
 export function useClients() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [clients, set_clients] = useState<FirestoreClient[]>([]);
+  const [loading, set_loading] = useState(true);
+  const [error, set_error] = useState<string | null>(null);
+  const { is_authenticated } = useAuth();
 
-  const deleteClient = useCallback(async (id: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const { error } = await supabase
-        .from('clients')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw error;
-      
-      return true;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao excluir cliente';
-      setError(message);
-      return false;
-    } finally {
-      setLoading(false);
+  const fetch_clients = useCallback(async () => {
+    if (!is_authenticated) {
+      set_clients([]);
+      set_loading(false);
+      return;
     }
-  }, []);
 
-  const getClients = useCallback(async () => {
     try {
-      setLoading(true);
-      setError(null);
-      
-      const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .order('name');
-      
-      if (error) throw error;
-      
-      return data;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao buscar clientes';
-      setError(message);
-      return [];
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      set_loading(true);
+      set_error(null);
 
-  const getClientById = useCallback(async (id: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .eq('id', id)
-        .single();
-      
-      if (error) throw error;
-      
-      return data;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao buscar cliente';
-      setError(message);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      // Tentar buscar offline primeiro
+      const offline_clients = await getAllOfflineClients();
+      if (offline_clients.length > 0) {
+        set_clients(offline_clients);
+        set_loading(false);
+        return;
+      }
 
-  const createClient = useCallback(async (client: ClientInsert) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const { data, error } = await supabase
-        .from('clients')
-        .insert([client])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      return data;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao criar cliente';
-      setError(message);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      // Buscar dados do Firestore
+      const clients_query = query(
+        collection(db, 'clients'),
+        orderBy('name', 'asc')
+      );
 
-  const updateClient = useCallback(async (id: string, updates: ClientUpdate) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const { data, error } = await supabase
-        .from('clients')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      
-      return data;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao atualizar cliente';
-      setError(message);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      const snapshot = await getDocs(clients_query);
+      const clients_data = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as FirestoreClient[];
 
-  const searchClients = useCallback(async (query: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const { data, error } = await supabase
-        .from('clients')
-        .select('*')
-        .or(`name.ilike.%${query}%, address.ilike.%${query}%`)
-        .order('name');
-      
-      if (error) throw error;
-      
-      return data;
+      set_clients(clients_data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao buscar clientes';
-      setError(message);
-      return [];
+      console.error('Erro ao buscar clientes:', err);
+      set_error('Não foi possível carregar os clientes');
     } finally {
-      setLoading(false);
+      set_loading(false);
     }
-  }, []);
+  }, [is_authenticated]);
 
-  return {
-    loading,
-    error,
-    getClients,
-    getClientById,
-    createClient,
-    updateClient,
-    deleteClient,
-    searchClients
-  };
+  useEffect(() => {
+    fetch_clients();
+  }, [fetch_clients]);
+
+  return { clients, loading, error, refresh: fetch_clients };
 }

@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
 import { Zap } from 'lucide-react';
+import { useAuth } from '../../lib/firebase-auth-context';
 
 const ForgotPassword: React.FC = () => {
   const [email, set_email] = useState('');
   const [loading, set_loading] = useState(false);
   const [error, set_error] = useState<string | null>(null);
   const [success, set_success] = useState(false);
+  const { reset_password } = useAuth();
 
   const handle_submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,15 +16,10 @@ const ForgotPassword: React.FC = () => {
     set_error(null);
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-
-      if (error) throw error;
-
+      await reset_password(email);
       set_success(true);
     } catch (err) {
-      set_error(err instanceof Error ? err.message : 'Erro ao enviar email de recuperação');
+      set_error('Erro ao enviar email de recuperação. Verifique o endereço informado.');
     } finally {
       set_loading(false);
     }

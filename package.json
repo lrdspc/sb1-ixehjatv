@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:firebase": "concurrently \"node scripts/start-emulators.js\" \"vite\"",
     "build": "npm run generate-icons && npm run generate-screenshots && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -16,12 +17,21 @@
     "pwa:dev": "vite --mode pwa",
     "pwa:build": "npm run generate-icons && npm run generate-screenshots && vite build --mode pwa",
     "analyze": "vite build --mode analyze",
-    "vercel-build": "vite build --mode pwa"
+    "vercel-build": "vite build --mode pwa",
+    "migrate": "node scripts/migrate-to-firebase.js",
+    "emulators": "node scripts/start-emulators.js",
+    "firebase:deploy": "npm run build && firebase deploy",
+    "firebase:check": "node scripts/check-firebase.js",
+    "firebase:setup": "npm run migrate && npm run firebase:check"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.4",
     "@vercel/speed-insights": "^1.2.0",
     "date-fns": "^3.6.0",
+    "firebase": "^10.8.0",
+    "@firebase/auth": "^1.6.0",
+    "@firebase/firestore": "^4.5.0",
+    "@firebase/storage": "^0.12.0",
+    "@firebase/messaging": "^0.12.0",
     "framer-motion": "^12.6.5",
     "idb": "^8.0.2",
     "lucide-react": "^0.344.0",
@@ -68,6 +78,8 @@
     "typescript-eslint": "^8.3.0",
     "vite": "^6.2.6",
     "vite-plugin-pwa": "^1.0.0",
-    "workbox-window": "^7.3.0"
+    "workbox-window": "^7.3.0",
+    "concurrently": "^8.2.0",
+    "firebase-tools": "^13.0.0"
   }
 }

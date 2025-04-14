@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
 import { Zap } from 'lucide-react';
+import { useAuth } from '../../lib/firebase-auth-context';
 
 const Login: React.FC = () => {
   const [email, set_email] = useState('');
@@ -9,6 +9,7 @@ const Login: React.FC = () => {
   const [loading, set_loading] = useState(false);
   const [error, set_error] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { sign_in } = useAuth();
 
   const handle_login = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,17 +17,10 @@ const Login: React.FC = () => {
     set_error(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-
-      if (error) throw error;
-
-      // Login bem sucedido, redirecionar para o dashboard
+      await sign_in(email, password);
       navigate('/dashboard');
     } catch (err) {
-      set_error(err instanceof Error ? err.message : 'Erro ao fazer login');
+      set_error('Email ou senha inválidos');
     } finally {
       set_loading(false);
     }

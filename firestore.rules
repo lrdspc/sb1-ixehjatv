@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Funções auxiliares
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    function isInspectionCreator(inspectionData) {
+      return inspectionData.created_by == request.auth.uid;
+    }
+    
+    function hasValidFields(required, data) {
+      return required.all(field => data[field] != null);
+    }
+
+    // Regras para perfis de usuários
+    match /users_profiles/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && isOwner(userId);
+      allow delete: if false; // Não permitir exclusão de perfis
+    }
+
+    // Regras para inspeções
+    match /inspections/{inspectionId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+        hasValidFields(['client_id', 'status', 'inspection_date'], request.resource.data);
+      allow update: if isAuthenticated() && 
+        isInspectionCreator(resource.data);
+      allow delete: if isAuthenticated() && 
+        isInspectionCreator(resource.data);
+    }
+
+    // Regras para clientes
+    match /clients/{clientId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+        hasValidFields(['name', 'type', 'address'], request.resource.data);
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+
+    // Regras para telhas de inspeção
+    match /inspection_tiles/{tileId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Regras para não-conformidades
+    match /nonconformities/{nonconformityId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+  }
+}

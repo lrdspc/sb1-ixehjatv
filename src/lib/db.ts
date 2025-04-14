@@ -1,247 +1,106 @@
-import { openDB, DBSchema, IDBPDatabase, IDBPCursorWithValue } from 'idb';
+import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { Inspection } from '../types/inspections';
+import { Client } from '../types/clients';
 
 interface BrasilitDB extends DBSchema {
   inspections: {
     key: string;
-    value: {
-      id: string;
-      clientId: string;
-      date: string;
-      status: 'draft' | 'completed' | 'syncing' | 'error';
-      syncedAt?: string;
-      data: any;
-      createdAt: string;
-      updatedAt: string;
-    };
-    indexes: { 'by-status': string; 'by-date': string };
+    value: Inspection;
+    indexes: { 'by-client': string; 'by-status': string; 'by-date': string };
   };
   clients: {
     key: string;
-    value: {
-      id: string;
-      name: string;
-      address: string;
-      phone: string;
-      email: string;
-      syncedAt?: string;
-      status: 'synced' | 'local' | 'syncing' | 'error';
-    };
+    value: Client;
     indexes: { 'by-name': string };
-  };
-  syncQueue: {
-    key: string;
-    value: {
-      id: string;
-      type: string;
-      table: string;
-      action: 'create' | 'update' | 'delete';
-      data: any;
-      attempts: number;
-      createdAt: string;
-      timestamp?: string;
-    };
   };
 }
 
-let dbPromise: Promise<IDBPDatabase<BrasilitDB>> | null = null;
-let isUpgrading = false;
+let db: IDBPDatabase<BrasilitDB>;
 
-export const initDB = async () => {
-  if (!dbPromise) {
-    dbPromise = new Promise(async (resolve, reject) => {
-      try {
-        if (isUpgrading) {
-          // Aguardar se já estiver em upgrade
-          while (isUpgrading) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-          }
-          return resolve(await openDB<BrasilitDB>('brasilit-db', 2));
-        }
-
-        isUpgrading = true;
-        const db = await openDB<BrasilitDB>('brasilit-db', 2, {
-          upgrade(db, oldVersion) {
-            if (oldVersion < 1) {
-              // Inspections store
-              const inspectionsStore = db.createObjectStore('inspections', { keyPath: 'id' });
-              inspectionsStore.createIndex('by-status', 'status');
-              inspectionsStore.createIndex('by-date', 'date');
-
-              // Clients store
-              const clientsStore = db.createObjectStore('clients', { keyPath: 'id' });
-              clientsStore.createIndex('by-name', 'name');
-
-              // Sync queue store
-              db.createObjectStore('syncQueue', { keyPath: 'id' });
-            }
-            
-            if (oldVersion < 2) {
-              // Adicionar o campo type para as entradas existentes na syncQueue
-              const tx = db.transaction('syncQueue', 'readwrite');
-              return new Promise<void>((resolve) => {
-                tx.store.openCursor().then(function updateEntries(cursor: IDBPCursorWithValue<BrasilitDB, ["syncQueue"], "syncQueue", unknown, "readwrite"> | null): Promise<void> {
-                  try {
-                    if (!cursor) {
-                      resolve();
-                      return;
-                    }
-                    const value = cursor.value;
-                    if (!value.type) {
-                      value.type = value.table;
-                    }
-                    cursor.update(value);
-                    return cursor.continue().then(updateEntries) as Promise<void>;
-                  } catch (error) {
-                    console.error('Error updating cursor:', error);
-                    resolve();
-                  }
-                });
-              });
-            }
-          },
-          blocked() {
-            console.warn('Database blocked - waiting to upgrade');
-          },
-          blocking() {
-            console.warn('Database needs to close for upgrade');
-          }
+export async function initDB(): Promise<void> {
+  try {
+    db = await openDB<BrasilitDB>('brasilit-db', 1, {
+      upgrade(db) {
+        // Criar store de inspeções
+        const inspectionsStore = db.createObjectStore('inspections', {
+          keyPath: 'id'
         });
-        isUpgrading = false;
-        resolve(db);
-      } catch (error) {
-        isUpgrading = false;
-        console.error('Error initializing database:', error);
-        reject(error);
+        inspectionsStore.createIndex('by-client', 'client_id');
+        inspectionsStore.createIndex('by-status', 'status');
+        inspectionsStore.createIndex('by-date', 'created_at');
+
+        // Criar store de clientes
+        const clientsStore = db.createObjectStore('clients', {
+          keyPath: 'id'
+        });
+        clientsStore.createIndex('by-name', 'name');
       }
     });
+
+    console.log('Banco de dados IndexedDB inicializado com sucesso');
+  } catch (error) {
+    console.error('Erro ao inicializar banco de dados IndexedDB:', error);
+    throw error;
   }
-  return dbPromise;
-};
+}
 
-// Generic CRUD operations
-export const addItem = async <T extends 'inspections' | 'clients' | 'syncQueue'>(
-  storeName: T,
-  item: BrasilitDB[T]['value']
-): Promise<string> => {
-  const db = await initDB();
-  return db.add(storeName, item);
-};
+// Funções para Inspeções
+export async function saveInspection(inspection: Inspection): Promise<void> {
+  await db.put('inspections', inspection);
+}
 
-export const getItem = async <T extends 'inspections' | 'clients' | 'syncQueue'>(
-  storeName: T,
-  id: string
-): Promise<BrasilitDB[T]['value'] | undefined> => {
-  const db = await initDB();
-  return db.get(storeName, id);
-};
+export async function getInspection(id: string): Promise<Inspection | undefined> {
+  return await db.get('inspections', id);
+}
 
-export const getAllItems = async <T extends 'inspections' | 'clients' | 'syncQueue'>(
-  storeName: T
-): Promise<BrasilitDB[T]['value'][]> => {
-  const db = await initDB();
-  return db.getAll(storeName);
-};
+export async function getAllInspections(): Promise<Inspection[]> {
+  return await db.getAll('inspections');
+}
 
-export const updateItem = async <T extends 'inspections' | 'clients' | 'syncQueue'>(
-  storeName: T,
-  item: BrasilitDB[T]['value']
-): Promise<string> => {
-  const db = await initDB();
-  return db.put(storeName, item);
-};
+export async function getInspectionsByClient(clientId: string): Promise<Inspection[]> {
+  const index = db.transaction('inspections').store.index('by-client');
+  return await index.getAll(clientId);
+}
 
-export const deleteItem = async <T extends 'inspections' | 'clients' | 'syncQueue'>(
-  storeName: T,
-  id: string
-): Promise<void> => {
-  const db = await initDB();
-  return db.delete(storeName, id);
-};
+export async function deleteInspection(id: string): Promise<void> {
+  await db.delete('inspections', id);
+}
 
-// Specific operations for inspections
-export const getInspectionsByStatus = async (status: string) => {
-  const db = await initDB();
-  const index = db.transaction('inspections').store.index('by-status');
-  return index.getAll(status);
-};
+// Funções para Clientes
+export async function saveClient(client: Client): Promise<void> {
+  await db.put('clients', client);
+}
 
-export const getInspectionsByDate = async (date: string) => {
-  const db = await initDB();
-  const index = db.transaction('inspections').store.index('by-date');
-  return index.getAll(date);
-};
+export async function getClient(id: string): Promise<Client | undefined> {
+  return await db.get('clients', id);
+}
 
-// Specific operations for clients
-export const getClientsByName = async (name: string) => {
-  const db = await initDB();
-  const index = db.transaction('clients').store.index('by-name');
-  return index.getAll(name);
-};
+export async function getAllClients(): Promise<Client[]> {
+  return await db.getAll('clients');
+}
 
-// Sync queue operations
-export const addToSyncQueue = async (
-  table: string,
-  action: 'create' | 'update' | 'delete',
-  data: any,
-  type?: string
-) => {
-  const db = await initDB();
-  const id = `${table}-${data.id}-${Date.now()}`;
-  return db.add('syncQueue', {
-    id,
-    type: type || table,
-    table,
-    action,
-    data,
-    attempts: 0,
-    createdAt: new Date().toISOString(),
-  });
-};
+export async function deleteClient(id: string): Promise<void> {
+  await db.delete('clients', id);
+}
 
-export const addSyncItem = async (item: {
-  type: string;
-  data: any;
-  timestamp: string;
-  attempts: number;
-}) => {
-  const db = await initDB();
-  const id = `${item.type}-${item.data.id || Date.now()}-${Date.now()}`;
-  return db.add('syncQueue', {
-    id,
-    type: item.type,
-    table: item.type,
-    action: 'update',
-    data: item.data,
-    attempts: item.attempts,
-    createdAt: new Date().toISOString(),
-    timestamp: item.timestamp
-  });
-};
+// Função para limpar o banco de dados
+export async function clearDatabase(): Promise<void> {
+  const tx = db.transaction(['inspections', 'clients'], 'readwrite');
+  await Promise.all([
+    tx.objectStore('inspections').clear(),
+    tx.objectStore('clients').clear()
+  ]);
+  await tx.done;
+}
 
-export const getSyncItemsByType = async (type: string) => {
-  const db = await initDB();
-  const allItems = await db.getAll('syncQueue');
-  return allItems.filter(item => item.type === type);
-};
-
-export const getNextSyncItem = async () => {
-  const db = await initDB();
-  const allItems = await db.getAll('syncQueue');
-  return allItems.sort((a, b) => 
-    new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-  )[0];
-};
-
-export const removeSyncItem = async (id: string) => {
-  const db = await initDB();
-  return db.delete('syncQueue', id);
-};
-
-export const updateSyncAttempt = async (id: string) => {
-  const db = await initDB();
-  const item = await db.get('syncQueue', id);
-  if (item) {
-    item.attempts += 1;
-    return db.put('syncQueue', item);
+// Função para verificar o estado do banco de dados
+export async function checkDatabaseHealth(): Promise<boolean> {
+  try {
+    await getAllClients();
+    await getAllInspections();
+    return true;
+  } catch (error) {
+    console.error('Erro ao verificar saúde do banco de dados:', error);
+    return false;
   }
-};
+}

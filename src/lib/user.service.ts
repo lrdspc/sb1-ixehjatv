@@ -1,128 +1,88 @@
-import { supabase } from './supabase';
-import { Database } from './database.types';
+import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
+import { app } from './firebase';
+import { updateProfile, User } from 'firebase/auth';
 
-type Profile = Database['public']['Tables']['users_profiles']['Row'];
-type ProfileInsert = Database['public']['Tables']['users_profiles']['Insert'];
+const db = getFirestore(app);
 
-/**
- * Sincroniza o perfil do usuário no Supabase
- */
-export async function sync_user_profile(user_id: string, user_data: {
+interface UserProfile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function sync_user_profile(user: User, user_data: {
   full_name?: string;
-  email?: string;
   avatar_url?: string;
-}): Promise<Profile | null> {
+}): Promise<UserProfile | null> {
   try {
-    // Verificar se o perfil já existe
-    const { data: existing_profile, error: fetch_error } = await supabase
-      .from('users_profiles')
-      .select('*')
-      .eq('id', user_id)
-      .single();
-
-    if (fetch_error && fetch_error.code !== 'PGRST116') { // PGRST116 = Nenhum resultado encontrado
-      console.error('Erro ao buscar perfil:', fetch_error);
-      return null;
+    // Atualizar perfil no Firebase Auth
+    if (user_data.full_name) {
+      await updateProfile(user, {
+        displayName: user_data.full_name
+      });
     }
 
-    if (existing_profile) {
-      // Atualizar perfil existente
-      const profile_data: Partial<Profile> = {
-        full_name: user_data.full_name || existing_profile.full_name,
-        avatar_url: user_data.avatar_url || existing_profile.avatar_url,
-        updated_at: new Date().toISOString()
-      };
+    // Buscar ou criar documento do perfil no Firestore
+    const userRef = doc(db, 'users_profiles', user.uid);
+    const userDoc = await getDoc(userRef);
 
-      const { data, error } = await supabase
-        .from('users_profiles')
-        .update(profile_data)
-        .eq('id', user_id)
-        .select()
-        .single();
+    const profile_data = {
+      id: user.uid,
+      full_name: user_data.full_name || user.displayName || null,
+      avatar_url: user_data.avatar_url || null,
+      updated_at: new Date().toISOString()
+    };
 
-      if (error) {
-        console.error('Erro ao atualizar perfil:', error);
-        return null;
-      }
-
-      return data;
-    } else {
+    if (!userDoc.exists()) {
       // Criar novo perfil
-      const profile_data: ProfileInsert = {
-        id: user_id,
-        user_id: user_id,
-        full_name: user_data.full_name || null,
-        avatar_url: user_data.avatar_url || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      const { data, error } = await supabase
-        .from('users_profiles')
-        .insert(profile_data)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Erro ao criar perfil:', error);
-        return null;
-      }
-
-      return data;
+      await setDoc(userRef, {
+        ...profile_data,
+        created_at: new Date().toISOString()
+      });
+    } else {
+      // Atualizar perfil existente
+      await setDoc(userRef, profile_data, { merge: true });
     }
+
+    const updatedDoc = await getDoc(userRef);
+    return updatedDoc.data() as UserProfile;
   } catch (err) {
     console.error('Erro ao sincronizar perfil:', err);
     return null;
   }
 }
 
-/**
- * Obtém o perfil do usuário
- */
-export async function get_user_profile(user_id: string): Promise<Profile | null> {
+export async function get_user_profile(user_id: string): Promise<UserProfile | null> {
   try {
-    const { data, error } = await supabase
-      .from('users_profiles')
-      .select('*')
-      .eq('id', user_id)
-      .single();
+    const userRef = doc(db, 'users_profiles', user_id);
+    const userDoc = await getDoc(userRef);
 
-    if (error) {
-      console.error('Erro ao obter perfil:', error);
+    if (!userDoc.exists()) {
       return null;
     }
 
-    return data;
+    return userDoc.data() as UserProfile;
   } catch (err) {
-    console.error('Erro ao obter perfil:', err);
+    console.error('Erro ao buscar perfil:', err);
     return null;
   }
 }
 
-/**
- * Atualiza o perfil do usuário
- */
 export async function update_user_profile(
-  user_id: string, 
-  updates: Partial<Profile>
-): Promise<Profile | null> {
+  user_id: string,
+  updates: Partial<UserProfile>
+): Promise<UserProfile | null> {
   try {
-    const { data, error } = await supabase
-      .from('users_profiles')
-      .update({
-        ...updates,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', user_id)
-      .select()
-      .single();
+    const userRef = doc(db, 'users_profiles', user_id);
+    await setDoc(userRef, {
+      ...updates,
+      updated_at: new Date().toISOString()
+    }, { merge: true });
 
-    if (error) {
-      console.error('Erro ao atualizar perfil:', error);
-      return null;
-    }
-
-    return data;
+    const updatedDoc = await getDoc(userRef);
+    return updatedDoc.data() as UserProfile;
   } catch (err) {
     console.error('Erro ao atualizar perfil:', err);
     return null;

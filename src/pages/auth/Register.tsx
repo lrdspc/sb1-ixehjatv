@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
 import { Zap } from 'lucide-react';
+import { useAuth } from '../../lib/firebase-auth-context';
+import { updateProfile } from 'firebase/auth';
 
 const Register: React.FC = () => {
   const [email, set_email] = useState('');
@@ -11,6 +12,7 @@ const Register: React.FC = () => {
   const [loading, set_loading] = useState(false);
   const [error, set_error] = useState<string | JSX.Element | null>(null);
   const navigate = useNavigate();
+  const { sign_up } = useAuth();
 
   const validate_form = () => {
     if (!email || !password || !confirm_password || !full_name) {
@@ -39,60 +41,39 @@ const Register: React.FC = () => {
     }
 
     try {
-      const { data: auth_data, error: auth_error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name },
-          emailRedirectTo: `${window.location.origin}/login`,
-        }
-      });
+      const user_credential = await sign_up(email, password);
+      
+      if (user_credential && user_credential.user) {
+        // Atualizar o perfil do usuário com o nome completo
+        await updateProfile(user_credential.user, {
+          displayName: full_name
+        });
 
-      if (auth_error) {
-        if (auth_error.message.toLowerCase().includes('timeout')) {
-          set_error('O servidor está demorando para responder. Por favor, tente novamente.');
-          return;
-        }
-        throw auth_error;
-      }
-
-      if (auth_data?.user) {
         navigate('/login', { 
           state: { 
             message: 'Registro concluído! Por favor, verifique seu email para confirmar sua conta.',
             email
           }
         });
-      } else {
-        set_error('Não foi possível criar a conta. Tente novamente mais tarde.');
       }
     } catch (err) {
-      console.error('Erro no registro:', err);
+      const error_message = 
+        err instanceof Error ? err.message : 'Erro ao criar conta. Por favor, tente novamente.';
       
-      if (err instanceof Error) {
-        const errorMessage = err.message.toLowerCase();
-        
-        if (errorMessage.includes('already registered') || 
-            errorMessage.includes('already in use') || 
-            errorMessage.includes('already exists')) {
-          set_error(
-            <div>
-              Este email já está registrado. 
-              <button 
-                onClick={() => navigate('/login', { state: { email } })}
-                className="ml-2 text-blue-600 hover:underline"
-              >
-                Ir para o login?
-              </button>
-            </div>
-          );
-        } else if (errorMessage.includes('email') && errorMessage.includes('invalid')) {
-          set_error('O formato do email é inválido. Por favor, verifique.');
-        } else {
-          set_error('Erro ao criar conta. Por favor, tente novamente.');
-        }
+      if (error_message.toLowerCase().includes('email-already-in-use')) {
+        set_error(
+          <div>
+            Este email já está registrado. 
+            <button 
+              onClick={() => navigate('/login', { state: { email } })}
+              className="ml-2 text-blue-600 hover:underline"
+            >
+              Ir para o login?
+            </button>
+          </div>
+        );
       } else {
-        set_error('Erro inesperado. Por favor, tente novamente mais tarde.');
+        set_error(error_message);
       }
     } finally {
       set_loading(false);

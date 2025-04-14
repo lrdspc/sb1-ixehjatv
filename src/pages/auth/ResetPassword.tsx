@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
 import { Zap } from 'lucide-react';
+import { useAuth } from '../../lib/firebase-auth-context';
 
 const ResetPassword: React.FC = () => {
   const [password, set_password] = useState('');
@@ -9,14 +9,7 @@ const ResetPassword: React.FC = () => {
   const [loading, set_loading] = useState(false);
   const [error, set_error] = useState<string | null>(null);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Verificar se temos um hash válido na URL
-    const hash = window.location.hash;
-    if (!hash || !hash.includes('type=recovery')) {
-      navigate('/login');
-    }
-  }, [navigate]);
+  const { update_user_password } = useAuth();
 
   const handle_submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,20 +23,14 @@ const ResetPassword: React.FC = () => {
     }
 
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: password
-      });
-
-      if (error) throw error;
-
-      // Senha atualizada com sucesso, redirecionar para o login
+      await update_user_password(password);
       navigate('/login', { 
         state: { 
           message: 'Senha atualizada com sucesso! Faça login com sua nova senha.'
         }
       });
     } catch (err) {
-      set_error(err instanceof Error ? err.message : 'Erro ao atualizar senha');
+      set_error('Erro ao atualizar senha. Por favor, tente novamente.');
     } finally {
       set_loading(false);
     }

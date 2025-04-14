@@ -31,173 +31,74 @@ const PrivateWrapper = ({ children }: { children: React.ReactNode }) => (
   </PrivateRoute>
 );
 
-// Definir as rotas públicas
-const publicRoutes: RouteObject[] = [
+// Rotas públicas
+export const publicRoutes: RouteObject[] = [
   {
     path: '/login',
-    element: (
-      <React.Suspense fallback={<CardSkeleton />}>
-        <Login />
-      </React.Suspense>
-    )
+    element: <Login />,
   },
   {
     path: '/register',
-    element: (
-      <React.Suspense fallback={<CardSkeleton />}>
-        <Register />
-      </React.Suspense>
-    )
+    element: <Register />,
   },
   {
     path: '/forgot-password',
-    element: (
-      <React.Suspense fallback={<CardSkeleton />}>
-        <ForgotPassword />
-      </React.Suspense>
-    )
+    element: <ForgotPassword />,
   },
   {
     path: '/reset-password',
-    element: (
-      <React.Suspense fallback={<CardSkeleton />}>
-        <ResetPassword />
-      </React.Suspense>
-    )
-  }
+    element: <ResetPassword />,
+  },
 ];
 
-// Definir as rotas privadas
-const privateRoutes: RouteObject[] = [
+// Rotas privadas (requerem autenticação)
+export const privateRoutes: RouteObject[] = [
   {
     path: '/',
-    element: (
-      <React.Suspense fallback={<DashboardSkeleton />}>
-        <Dashboard />
-      </React.Suspense>
-    )
+    element: <PrivateWrapper><Dashboard /></PrivateWrapper>,
   },
   {
-    path: '/nova-vistoria',
-    element: (
-      <React.Suspense fallback={<CardSkeleton />}>
-        <NewInspection />
-      </React.Suspense>
-    )
+    path: '/dashboard',
+    element: <PrivateWrapper><Dashboard /></PrivateWrapper>,
   },
   {
-    path: '/selecao-cliente',
-    element: (
-      <React.Suspense fallback={<TableSkeleton />}>
-        <ClientSelection />
-      </React.Suspense>
-    )
+    path: '/new-inspection',
+    element: <PrivateWrapper><NewInspection /></PrivateWrapper>,
   },
   {
-    path: '/informacoes-basicas',
-    element: (
-      <React.Suspense fallback={<CardSkeleton />}>
-        <BasicInfo />
-      </React.Suspense>
-    )
+    path: '/inspection/client',
+    element: <PrivateWrapper><ClientSelection /></PrivateWrapper>,
   },
   {
-    path: '/selecao-telhas',
-    element: (
-      <React.Suspense fallback={<CardSkeleton />}>
-        <TileSelection />
-      </React.Suspense>
-    )
+    path: '/inspection/basic-info',
+    element: <PrivateWrapper><BasicInfo /></PrivateWrapper>,
   },
   {
-    path: '/nao-conformidades',
-    element: (
-      <React.Suspense fallback={<CardSkeleton />}>
-        <NonConformities />
-      </React.Suspense>
-    )
+    path: '/inspection/tiles',
+    element: <PrivateWrapper><TileSelection /></PrivateWrapper>,
   },
   {
-    path: '/registro-fotografico',
-    element: (
-      <React.Suspense fallback={<CardSkeleton />}>
-        <PhotoCapture />
-      </React.Suspense>
-    )
+    path: '/inspection/nonconformities',
+    element: <PrivateWrapper><NonConformities /></PrivateWrapper>,
   },
   {
-    path: '/revisao-finalizacao',
-    element: (
-      <React.Suspense fallback={<CardSkeleton />}>
-        <ReviewAndFinalize />
-      </React.Suspense>
-    )
+    path: '/inspection/photos',
+    element: <PrivateWrapper><PhotoCapture /></PrivateWrapper>,
   },
   {
-    path: '/relatorios',
-    element: (
-      <React.Suspense fallback={<TableSkeleton />}>
-        <Reports />
-      </React.Suspense>
-    )
+    path: '/inspection/review',
+    element: <PrivateWrapper><ReviewAndFinalize /></PrivateWrapper>,
   },
   {
-    path: '/clientes',
-    element: (
-      <React.Suspense fallback={<TableSkeleton />}>
-        <Clients />
-      </React.Suspense>
-    )
+    path: '/reports',
+    element: <PrivateWrapper><Reports /></PrivateWrapper>,
   },
   {
-    path: '/calendario',
-    element: (
-      <React.Suspense fallback={<CardSkeleton />}>
-        <Calendar />
-      </React.Suspense>
-    )
-  }
+    path: '/clients',
+    element: <PrivateWrapper><Clients /></PrivateWrapper>,
+  },
+  {
+    path: '/calendar',
+    element: <PrivateWrapper><Calendar /></PrivateWrapper>,
+  },
 ];
-
-// Combinar todas as rotas
-export const routes: RouteObject[] = [
-  ...publicRoutes,
-  {
-    path: '*',
-    element: <PrivateWrapper>
-      <AppLayout>
-        <PrivateRoutesOutlet />
-      </AppLayout>
-    </PrivateWrapper>
-  }
-];
-
-// Componente para o layout principal da aplicação
-function AppLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Layout principal da aplicação vai aqui */}
-      {children}
-    </div>
-  );
-}
-
-// Outlet para as rotas privadas
-function PrivateRoutesOutlet() {
-  return (
-    <React.Suspense fallback={<DashboardSkeleton />}>
-      {/* Aqui entraria um componente de Outlet para as rotas privadas */}
-      <div className="flex-1 overflow-y-auto">
-        {/* Seria substituído por <Outlet /> */}
-      </div>
-    </React.Suspense>
-  );
-}
-
-export const navItems = [
-  { path: '/', label: 'Dashboard', icon: 'Home' },
-  { path: '/nova-vistoria', label: 'Nova Vistoria', icon: 'Plus' },
-  { path: '/relatorios', label: 'Relatórios', icon: 'FileText' },
-  { path: '/clientes', label: 'Clientes', icon: 'Users' },
-  { path: '/calendario', label: 'Calendário', icon: 'Calendar' },
-]; 

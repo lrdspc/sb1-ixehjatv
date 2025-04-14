@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, LogOut, Settings } from 'lucide-react';
-import { useAuth } from '../../lib/auth-context';
+import { useAuth } from '../../lib/firebase-auth-context';
 
 const UserMenu: React.FC = () => {
   const navigate = useNavigate();
@@ -36,7 +36,7 @@ const UserMenu: React.FC = () => {
       >
         <span className="sr-only">Abrir menu do usuário</span>
         <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white">
-          {user?.email?.[0].toUpperCase() || <User className="h-5 w-5" />}
+          {user?.displayName?.[0].toUpperCase() || user?.email?.[0].toUpperCase() || <User className="h-5 w-5" />}
         </div>
       </button>
 
@@ -50,32 +50,18 @@ const UserMenu: React.FC = () => {
           <div className="px-4 py-3">
             <p className="text-sm">Logado como</p>
             <p className="text-sm font-medium text-gray-900 truncate">
+              {user?.displayName || 'Usuário'}
+            </p>
+            <p className="text-sm text-gray-500 truncate">
               {user?.email}
             </p>
           </div>
-
           <div className="py-1">
             <button
-              onClick={() => {
-                navigate('/perfil');
-                setIsOpen(false);
-              }}
-              className="group flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+              onClick={handle_sign_out}
+              className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
             >
-              <Settings className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
-              Configurações
-            </button>
-          </div>
-
-          <div className="py-1">
-            <button
-              onClick={() => {
-                handle_sign_out();
-                setIsOpen(false);
-              }}
-              className="group flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-gray-100 hover:text-red-700"
-            >
-              <LogOut className="mr-3 h-5 w-5 text-red-400 group-hover:text-red-500" />
+              <LogOut className="mr-3 h-4 w-4" />
               Sair
             </button>
           </div>

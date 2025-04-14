@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../lib/auth-context';
+import { useAuth } from '../../lib/firebase-auth-context';
 
 type PrivateRouteProps = {
   children: React.ReactNode;

@@ -1,43 +1,33 @@
 import React from 'react';
 import { render, screen, act } from '@testing-library/react';
-import { AuthProvider, useAuth } from './auth-context';
+import { AuthProvider, useAuth } from './firebase-auth-context';
+import { User } from 'firebase/auth';
 
-// Mock do Supabase
-jest.mock('./supabase', () => ({
-  supabase: {
-    auth: {
-      getSession: jest.fn().mockResolvedValue({
-        data: {
-          session: {
-            user: {
-              id: 'test-user-id',
-              email: 'test@example.com',
-              user_metadata: {
-                full_name: 'Test User'
-              }
-            }
-          }
-        },
-        error: null
-      }),
-      signInWithPassword: jest.fn().mockResolvedValue({
-        data: {
-          user: {
-            id: 'test-user-id',
-            email: 'test@example.com'
-          },
-          session: {
-            access_token: 'test-token'
-          }
-        },
-        error: null
-      }),
-      signOut: jest.fn().mockResolvedValue({ error: null }),
-      onAuthStateChange: jest.fn().mockReturnValue({
-        data: { subscription: { unsubscribe: jest.fn() } }
-      })
+// Mock do Firebase Auth
+jest.mock('firebase/auth', () => ({
+  getAuth: jest.fn(),
+  onAuthStateChanged: jest.fn((auth, callback) => {
+    callback({
+      uid: 'test-user-id',
+      email: 'test@example.com',
+      displayName: 'Test User'
+    });
+    return jest.fn(); // unsubscribe function
+  }),
+  signInWithEmailAndPassword: jest.fn().mockResolvedValue({
+    user: {
+      uid: 'test-user-id',
+      email: 'test@example.com',
+      displayName: 'Test User'
     }
-  }
+  }),
+  createUserWithEmailAndPassword: jest.fn().mockResolvedValue({
+    user: {
+      uid: 'test-user-id',
+      email: 'test@example.com'
+    }
+  }),
+  signOut: jest.fn().mockResolvedValue(undefined)
 }));
 
 // Componente de teste que usa o hook useAuth
@@ -46,7 +36,7 @@ const TestComponent = () => {
   
   return (
     <div>
-      <div data-testid="user-id">{user?.id}</div>
+      <div data-testid="user-id">{user?.uid}</div>
       <div data-testid="is-authenticated">{is_authenticated ? 'true' : 'false'}</div>
       <div data-testid="loading">{loading ? 'true' : 'false'}</div>
     </div>
