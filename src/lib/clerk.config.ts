@@ -14,12 +14,8 @@ const clerkJwtTemplate = {
     template: `{
       "aud": "authenticated",
       "role": "authenticated",
-      "sub": "{{user.id}}",
       "email": "{{user.primary_email_address}}",
-      "user_id": "{{user.id}}",
-      "user_email": "{{user.primary_email_address}}",
-      "user_name": "{{user.first_name}} {{user.last_name}}",
-      "exp": {{jwt.exp}}
+      "user_id": "{{user.id}}"
     }`
   }
 };
@@ -49,6 +45,13 @@ const clerkConfig = {
     'https://nfgcxxfrhitgvidqoybk.supabase.co',
     window.location.origin
   ],
+  // Desativar verificação de dispositivo
+  supportedBrowsers: null,
+  // Configuração de cookies para permitir verificação entre dispositivos
+  cookieOptions: {
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+  },
   appearance: {
     variables: {
       colorPrimary: '#2563eb',

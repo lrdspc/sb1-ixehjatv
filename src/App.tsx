@@ -78,7 +78,7 @@ function App() {
                         <span className="text-2xl font-bold">Brasi<span className="text-blue-600">lit</span></span>
                       </div>
                     </div>
-                    <SignIn />
+                    <SignIn redirectUrl={window.location.href} />
                   </div>
                 </div>
               } />
@@ -91,7 +91,7 @@ function App() {
                         <span className="text-2xl font-bold">Brasi<span className="text-blue-600">lit</span></span>
                       </div>
                     </div>
-                    <SignUp />
+                    <SignUp redirectUrl={window.location.href} />
                   </div>
                 </div>
               } />
