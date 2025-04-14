@@ -81,36 +81,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       setLoading(true);
       
+      console.log('Iniciando processo de login...');
+      
       // Validar entrada
       if (!email || !password) {
-        throw new Error('Email e senha são obrigatórios');
+        console.log('Campos vazios detectados');
+        throw new Error('Por favor, preencha todos os campos');
       }
       
+      console.log('Tentando autenticar com o Supabase...');
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
+      console.log('Resposta do Supabase:', { data, error });
+      
       if (error) {
+        console.error('Erro retornado pelo Supabase:', error);
         // Traduzir mensagens de erro comuns
         if (error.message.includes('Invalid login credentials')) {
-          throw new Error('Credenciais inválidas. Verifique seu email e senha.');
+          throw new Error('Credenciais incorretas. Verifique seu email e senha.');
         } else if (error.message.includes('Email not confirmed')) {
-          throw new Error('Email não confirmado. Verifique sua caixa de entrada.');
+          throw new Error('Email não confirmado. Por favor, verifique sua caixa de entrada.');
+        } else if (error.message.includes('Invalid email')) {
+          throw new Error('Email inválido. Por favor, verifique o formato do email.');
         } else {
           throw error;
         }
       }
-      
+
+      console.log('Login bem-sucedido, atualizando estado...');
       // Atualizar estado após login bem-sucedido
       setSession(data.session);
       setUser(data.session?.user ?? null);
       setIsAuthenticated(!!data.session);
+      console.log('Estado atualizado com sucesso');
       
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro ao fazer login';
+      const errorMessage = err instanceof Error ? err.message : 'Erro ao fazer login. Tente novamente.';
+      console.error('Erro durante o processo de login:', err);
       setError(errorMessage);
-      console.error('Erro de login:', err);
     } finally {
       setLoading(false);
     }

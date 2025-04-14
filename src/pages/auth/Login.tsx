@@ -47,7 +47,7 @@ const Login: React.FC = () => {
     try {
       await signIn(email, password);
       // Feedback de sucesso
-      setSuccessMessage('Login realizado com sucesso!');
+      setSuccessMessage('Autenticação realizada com sucesso!');
     } catch (err) {
       // O erro já é tratado no contexto de autenticação
       console.error('Erro ao fazer login:', err);
