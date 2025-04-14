@@ -189,22 +189,6 @@ export default defineConfig(({ mode }) => {
               }
             },
             {
-              // Cache para Clerk API
-              urlPattern: /^https:\/\/clerk\..*\.com\/.*/i,
-              handler: 'NetworkFirst',
-              options: {
-                cacheName: 'clerk-cache',
-                expiration: {
-                  maxEntries: 20,
-                  maxAgeSeconds: 60 * 60 * 12 // 12 horas
-                },
-                networkTimeoutSeconds: 10,
-                cacheableResponse: {
-                  statuses: [0, 200]
-                }
-              }
-            },
-            {
               // Estratégia para navegação
               urlPattern: /\/(?:new-inspection|reports|clients|settings|profile)\/?$/,
               handler: 'NetworkFirst',
@@ -264,7 +248,6 @@ export default defineConfig(({ mode }) => {
               'react-dom', 
               'react-router-dom'
             ],
-            clerk: ['@clerk/clerk-react'],
             supabase: ['@supabase/supabase-js'],
             ui: ['lucide-react', 'framer-motion']
           }

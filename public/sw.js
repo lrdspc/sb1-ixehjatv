@@ -35,8 +35,7 @@ async function limitCacheSize(cacheName, maxItems) {
 // Função para verificar se a URL é uma API
 function isApiUrl(url) {
   return url.includes('/api/') || 
-         url.includes('supabase.co') || 
-         url.includes('clerk.dev');
+         url.includes('supabase.co');
 }
 
 // Função para verificar se a URL é um recurso estático

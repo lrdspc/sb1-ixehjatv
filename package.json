@@ -15,7 +15,6 @@
     "analyze": "vite build --mode analyze"
   },
   "dependencies": {
-
     "@supabase/supabase-js": "^2.49.4",
     "@vercel/speed-insights": "^1.2.0",
     "date-fns": "^3.6.0",

@@ -37,8 +37,7 @@ const Register: React.FC = () => {
           .insert({
             id: auth_data.user.id,
             user_id: auth_data.user.id,
-            full_name,
-            email
+            full_name
           });
 
         if (profile_error) throw profile_error;
@@ -199,7 +198,7 @@ const Register: React.FC = () => {
       {/* Footer */}
       <div className="mt-8 text-center">
         <p className="text-xs text-gray-500">
-          © {new Date().getFullYear()} Brasilit. Todos os direitos reservados.
+          {new Date().getFullYear()} Brasilit. Todos os direitos reservados.
         </p>
       </div>
     </div>
