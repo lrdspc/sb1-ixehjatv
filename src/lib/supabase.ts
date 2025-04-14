@@ -12,9 +12,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Criar o cliente Supabase com configurações otimizadas
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true
+    persistSession: false, // Não persistir sessão, pois usamos Clerk
+    autoRefreshToken: false // Não atualizar tokens automaticamente
   },
   realtime: {
     params: {
@@ -31,6 +30,17 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     schema: 'public'
   }
 });
+
+// Função para definir o token JWT do Clerk no Supabase
+export async function setSupabaseToken(token: string | null) {
+  if (token) {
+    // Definir o token JWT do Clerk como header de autorização para o Supabase
+    supabase.auth.setSession({
+      access_token: token,
+      refresh_token: token
+    });
+  }
+}
 
 // Função para verificar a conexão com o Supabase
 export async function checkSupabaseConnection(): Promise<boolean> {
@@ -56,4 +66,4 @@ export async function checkSupabaseConnection(): Promise<boolean> {
 export function handleSupabaseError(error: unknown, message = 'Erro na operação'): never {
   console.error(`${message}:`, error);
   throw new Error(`${message}: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
-} 
+}

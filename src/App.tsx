@@ -1,11 +1,13 @@
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './lib/auth.context';
+import { SignIn, SignUp } from '@clerk/clerk-react';
 import PrivateRoute from './components/layout/PrivateRoute';
 import UserMenu from './components/layout/UserMenu';
 import InstallPWA from './components/ui/InstallPWA';
 import OfflineIndicator from './components/ui/OfflineIndicator';
 import UpdateNotification from './components/ui/UpdateNotification';
+import ClerkSupabaseIntegration from './components/ClerkSupabaseIntegration';
 import { initSync } from './lib/sync.service';
 import { initDB } from './lib/db';
 import { 
@@ -24,8 +26,6 @@ import Sidebar from './components/layout/Sidebar';
 import MobileMenu from './components/layout/MobileMenu';
 
 // Lazy loaded pages
-const Login = lazy(() => import('./pages/auth/Login'));
-const Register = lazy(() => import('./pages/auth/Register'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const NewInspection = lazy(() => import('./pages/NewInspection'));
 const ClientSelection = lazy(() => import('./pages/inspection/ClientSelection'));
@@ -66,17 +66,34 @@ function App() {
     <ErrorBoundary>
       <ToastProvider>
         <AuthProvider>
+          <ClerkSupabaseIntegration />
           <Router>
             <Routes>
               <Route path="/login" element={
-                <Suspense fallback={<CardSkeleton />}>
-                  <Login />
-                </Suspense>
+                <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+                  <div className="sm:mx-auto sm:w-full sm:max-w-md">
+                    <div className="flex justify-center mb-6">
+                      <div className="flex items-center space-x-2">
+                        <Zap className="h-8 w-8 text-blue-600" />
+                        <span className="text-2xl font-bold">Brasi<span className="text-blue-600">lit</span></span>
+                      </div>
+                    </div>
+                    <SignIn />
+                  </div>
+                </div>
               } />
               <Route path="/register" element={
-                <Suspense fallback={<CardSkeleton />}>
-                  <Register />
-                </Suspense>
+                <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+                  <div className="sm:mx-auto sm:w-full sm:max-w-md">
+                    <div className="flex justify-center mb-6">
+                      <div className="flex items-center space-x-2">
+                        <Zap className="h-8 w-8 text-blue-600" />
+                        <span className="text-2xl font-bold">Brasi<span className="text-blue-600">lit</span></span>
+                      </div>
+                    </div>
+                    <SignUp />
+                  </div>
+                </div>
               } />
               <Route path="/forgot-password" element={
                 <Suspense fallback={<CardSkeleton />}>

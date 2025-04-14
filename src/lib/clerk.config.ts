@@ -30,6 +30,25 @@ const clerkConfig = {
   signUpUrl: '/register',
   afterSignInUrl: '/',
   afterSignUpUrl: '/',
+  // Configuração para usar códigos de verificação por email em vez de links mágicos
+  signIn: {
+    emailAddressVerification: {
+      strategy: 'email_code'
+    }
+  },
+  signUp: {
+    emailAddressVerification: {
+      strategy: 'email_code'
+    }
+  },
+  // Permitir verificação entre dispositivos diferentes
+  allowedRedirectOrigins: [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://localhost:5173',
+    'https://nfgcxxfrhitgvidqoybk.supabase.co',
+    window.location.origin
+  ],
   appearance: {
     variables: {
       colorPrimary: '#2563eb',
@@ -40,6 +59,49 @@ const clerkConfig = {
       formButtonPrimary: 'bg-blue-600 hover:bg-blue-700 text-white',
       card: 'shadow-md rounded-lg',
       formField: 'rounded border-gray-300 focus:ring-blue-500 focus:border-blue-500'
+    },
+    layout: {
+      socialButtonsVariant: 'iconButton',
+      socialButtonsPlacement: 'bottom',
+      termsPageUrl: 'https://clerk.com/terms',
+      privacyPageUrl: 'https://clerk.com/privacy',
+      showOptionalFields: false,
+      logoPlacement: 'inside',
+      logoImageUrl: 'https://brasilit.com.br/wp-content/themes/brasilit/images/logo.png',
+      shimmer: true
+    },
+    i18n: {
+      locale: 'pt-BR',
+      signIn: {
+        start: {
+          title: 'Entrar na sua conta',
+          subtitle: 'para continuar na Brasilit',
+          actionText: 'Não tem uma conta?',
+          actionLink: 'Criar conta'
+        },
+        emailCode: {
+          title: 'Verificar seu email',
+          subtitle: 'para continuar na Brasilit',
+          formTitle: 'Código de verificação',
+          formSubtitle: 'Digite o código enviado para seu email',
+          resendButton: 'Reenviar código'
+        }
+      },
+      signUp: {
+        start: {
+          title: 'Criar sua conta',
+          subtitle: 'para começar a usar a Brasilit',
+          actionText: 'Já tem uma conta?',
+          actionLink: 'Entrar'
+        },
+        emailCode: {
+          title: 'Verificar seu email',
+          subtitle: 'para continuar na Brasilit',
+          formTitle: 'Código de verificação',
+          formSubtitle: 'Digite o código enviado para seu email',
+          resendButton: 'Reenviar código'
+        }
+      }
     }
   },
   jwtTemplate: clerkJwtTemplate

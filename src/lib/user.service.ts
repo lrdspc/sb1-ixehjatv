@@ -1,8 +1,31 @@
-import { supabase } from './supabase';
+import { supabase, setSupabaseToken } from './supabase';
 import { Database } from './database.types';
+import { useAuth as useClerkAuth } from '@clerk/clerk-react';
 
 type Profile = Database['public']['Tables']['users_profiles']['Row'];
 type ProfileInsert = Database['public']['Tables']['users_profiles']['Insert'];
+
+/**
+ * Hook para obter o token JWT do Clerk para o Supabase
+ */
+export function useSupabaseToken() {
+  const { getToken } = useClerkAuth();
+  
+  const getSupabaseToken = async () => {
+    try {
+      const token = await getToken({ template: 'supabase' });
+      if (token) {
+        await setSupabaseToken(token);
+      }
+      return token;
+    } catch (error) {
+      console.error('Erro ao obter token para Supabase:', error);
+      return null;
+    }
+  };
+  
+  return { getSupabaseToken };
+}
 
 /**
  * Sincroniza o perfil do usuário no Supabase com os dados do Clerk
@@ -127,4 +150,4 @@ export async function updateUserProfile(
     console.error('Exceção ao atualizar perfil:', error);
     return null;
   }
-} 
+}
