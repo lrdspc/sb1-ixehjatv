@@ -6,6 +6,7 @@ import { Zap } from 'lucide-react';
 const Register: React.FC = () => {
   const [email, set_email] = useState('');
   const [password, set_password] = useState('');
+  const [confirm_password, set_confirm_password] = useState('');
   const [full_name, set_full_name] = useState('');
   const [loading, set_loading] = useState(false);
   const [error, set_error] = useState<string | JSX.Element | null>(null);
@@ -15,6 +16,13 @@ const Register: React.FC = () => {
     e.preventDefault();
     set_loading(true);
     set_error(null);
+
+    // Validar se as senhas coincidem
+    if (password !== confirm_password) {
+      set_error('As senhas não coincidem. Por favor, verifique.');
+      set_loading(false);
+      return;
+    }
 
     try {
       // Registrar usuário com confirmação automática
@@ -175,6 +183,25 @@ const Register: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => set_password(e.target.value)}
+                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="confirm_password" className="block text-sm font-medium text-gray-700">
+                Confirmar Senha
+              </label>
+              <div className="mt-1">
+                <input
+                  id="confirm_password"
+                  name="confirm_password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={confirm_password}
+                  onChange={(e) => set_confirm_password(e.target.value)}
                   className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   disabled={loading}
                 />
