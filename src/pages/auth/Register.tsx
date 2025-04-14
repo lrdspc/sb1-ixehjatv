@@ -39,6 +39,9 @@ const Register: React.FC = () => {
 
       if (auth_error) {
         console.error('Erro de autenticação:', auth_error);
+        console.error('Código de erro:', auth_error.code);
+        console.error('Detalhes do erro:', auth_error.details);
+        console.error('Mensagem completa:', auth_error.message);
         throw auth_error;
       }
 
@@ -75,10 +78,13 @@ const Register: React.FC = () => {
       console.error('Erro no registro:', err);
       // Mensagens de erro mais amigáveis baseadas em erros comuns
       if (err instanceof Error) {
-        if (err.message.includes('email') || err.message.includes('already registered')) {
+        const errorMessage = err.message.toLowerCase();
+        
+        if (errorMessage.includes('already registered') || errorMessage.includes('already in use') || errorMessage.includes('already exists')) {
+          // Email já está em uso
           set_error(
             <div>
-              Email inválido ou já está em uso. 
+              Este email já está registrado. 
               <button 
                 onClick={() => navigate('/login', { state: { email } })}
                 className="ml-2 text-blue-600 hover:underline"
@@ -87,10 +93,15 @@ const Register: React.FC = () => {
               </button>
             </div>
           );
-        } else if (err.message.includes('password')) {
+        } else if (errorMessage.includes('email') && errorMessage.includes('invalid')) {
+          // Email inválido
+          set_error('O formato do email é inválido. Por favor, verifique.');
+        } else if (errorMessage.includes('password')) {
           set_error('A senha deve ter pelo menos 6 caracteres.');
         } else {
-          set_error(err.message);
+          // Log detalhado para depuração
+          console.error('Erro específico:', err.message);
+          set_error(`Erro ao criar conta: ${err.message}`);
         }
       } else {
         set_error('Erro ao criar conta. Tente novamente mais tarde.');
