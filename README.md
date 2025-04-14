@@ -6,7 +6,7 @@ Aplicativo de inspeção para os produtos da Brasilit, permitindo profissionais 
 
 - **Frontend:** React, TypeScript, Vite, TailwindCSS
 - **Backend:** Supabase (PostgreSQL, API REST, Storage)
-- **Autenticação:** Clerk
+- **Autenticação:** Supabase Auth
 - **Hosting:** Vercel (frontend), Supabase (backend)
 - **Repositório:** GitHub
 
@@ -28,12 +28,6 @@ O projeto utiliza uma arquitetura moderna com foco em desempenho e experiência 
 - **RLS (Row Level Security)**: Segurança em nível de linha
 - **Supabase Storage**: Armazenamento de imagens e arquivos
 - **API RESTful**: Para comunicação entre o cliente e o servidor
-
-### Autenticação (Clerk)
-
-- Sistema de autenticação seguro e completo
-- Integração JWT com Supabase
-- Login, registro, recuperação de senha
 
 ## Estrutura do Banco de Dados
 
@@ -76,7 +70,6 @@ O projeto utiliza uma arquitetura moderna com foco em desempenho e experiência 
 - Node.js (versão 16 ou superior)
 - npm ou yarn
 - Conta no Supabase
-- Conta no Clerk
 
 ### Instalação
 
@@ -93,7 +86,7 @@ O projeto utiliza uma arquitetura moderna com foco em desempenho e experiência 
 
 3. Configure as variáveis de ambiente:
    - Copie o arquivo `.env.example` para `.env.local`
-   - Preencha com suas credenciais do Supabase e Clerk
+   - Preencha com suas credenciais do Supabase
 
 4. Execute em modo de desenvolvimento:
    ```bash
@@ -179,9 +172,8 @@ cp .env.example .env
 ```
 
 Required variables:
-- `VITE_CLERK_PUBLISHABLE_KEY`: From Clerk dashboard
-- `VITE_SUPABASE_URL`: From Supabase project settings
-- `VITE_SUPABASE_ANON_KEY`: From Supabase project settings
+- `VITE_SUPABASE_URL`: URL do seu projeto Supabase
+- `VITE_SUPABASE_ANON_KEY`: Chave anônima do seu projeto Supabase
 
 ### Key Integration Points
 1. **Frontend (Vercel) ↔ Supabase API**

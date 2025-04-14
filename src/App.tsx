@@ -37,8 +37,6 @@ const ReviewAndFinalize = lazy(() => import('./pages/inspection/ReviewAndFinaliz
 const Reports = lazy(() => import('./pages/Reports'));
 const Clients = lazy(() => import('./pages/Clients'));
 const Calendar = lazy(() => import('./pages/Calendar'));
-const ForgotPassword = lazy(() => import('./pages/auth/ForgotPassword'));
-const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
 
 // Import skeletons
 import DashboardSkeleton from './components/skeletons/DashboardSkeleton';
@@ -77,16 +75,6 @@ function App() {
                     <Register />
                   </Suspense>
                 } />
-                <Route path="/forgot-password" element={
-                  <Suspense fallback={<CardSkeleton />}>
-                    <ForgotPassword />
-                  </Suspense>
-                } />
-                <Route path="/reset-password" element={
-                  <Suspense fallback={<CardSkeleton />}>
-                    <ResetPassword />
-                  </Suspense>
-                } />
 
                 {/* Rotas Privadas */}
                 <Route path="/" element={
@@ -100,111 +88,124 @@ function App() {
                               <div className="flex items-center justify-between h-16">
                                 <button
                                   type="button"
-                                  className="lg:hidden text-gray-500 hover:text-gray-600"
+                                  className="px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 md:hidden"
                                   onClick={() => setSidebarOpen(true)}
                                 >
-                                  <Menu className="h-6 w-6" />
+                                  <span className="sr-only">Abrir menu</span>
+                                  <Menu className="h-6 w-6" aria-hidden="true" />
                                 </button>
-                                <div className="flex-1 lg:flex lg:items-center lg:justify-between">
-                                  <div className="flex-1 min-w-0">
-                                    {/* Barra de pesquisa pode ser adicionada aqui */}
+                                
+                                <div className="flex-1 flex justify-between">
+                                  <div className="flex-1 flex">
+                                    <div className="w-full flex md:ml-0">
+                                      <label htmlFor="search" className="sr-only">
+                                        Pesquisar
+                                      </label>
+                                      <div className="relative w-full text-gray-400 focus-within:text-gray-600">
+                                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                          <Search className="h-5 w-5" aria-hidden="true" />
+                                        </div>
+                                        <input
+                                          id="search"
+                                          name="search"
+                                          className="block w-full h-full pl-10 pr-3 py-2 border-transparent text-gray-900 placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-0 focus:border-transparent sm:text-sm"
+                                          placeholder="Pesquisar"
+                                          type="search"
+                                        />
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div className="flex items-center space-x-4">
+                                  <div className="ml-4 flex items-center md:ml-6">
+                                    <button
+                                      type="button"
+                                      className="p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                    >
+                                      <span className="sr-only">Ver notificações</span>
+                                      <Bell className="h-6 w-6" aria-hidden="true" />
+                                    </button>
                                     <UserMenu />
                                   </div>
                                 </div>
                               </div>
                             </div>
                           </header>
-                          <main className="flex-1 relative pb-8 z-0 overflow-y-auto">
-                            <Suspense fallback={<DashboardSkeleton />}>
-                              <Dashboard />
-                            </Suspense>
+                          
+                          <main>
+                            <div className="py-6">
+                              <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+                                <Routes>
+                                  <Route index element={
+                                    <Suspense fallback={<DashboardSkeleton />}>
+                                      <Dashboard />
+                                    </Suspense>
+                                  } />
+                                  <Route path="/new-inspection" element={
+                                    <Suspense fallback={<CardSkeleton />}>
+                                      <NewInspection />
+                                    </Suspense>
+                                  } />
+                                  <Route path="/inspection">
+                                    <Route path="client" element={
+                                      <Suspense fallback={<CardSkeleton />}>
+                                        <ClientSelection />
+                                      </Suspense>
+                                    } />
+                                    <Route path="basic-info" element={
+                                      <Suspense fallback={<CardSkeleton />}>
+                                        <BasicInfo />
+                                      </Suspense>
+                                    } />
+                                    <Route path="tiles" element={
+                                      <Suspense fallback={<CardSkeleton />}>
+                                        <TileSelection />
+                                      </Suspense>
+                                    } />
+                                    <Route path="nonconformities" element={
+                                      <Suspense fallback={<CardSkeleton />}>
+                                        <NonConformities />
+                                      </Suspense>
+                                    } />
+                                    <Route path="photos" element={
+                                      <Suspense fallback={<CardSkeleton />}>
+                                        <PhotoCapture />
+                                      </Suspense>
+                                    } />
+                                    <Route path="review" element={
+                                      <Suspense fallback={<CardSkeleton />}>
+                                        <ReviewAndFinalize />
+                                      </Suspense>
+                                    } />
+                                  </Route>
+                                  <Route path="/reports" element={
+                                    <Suspense fallback={<TableSkeleton />}>
+                                      <Reports />
+                                    </Suspense>
+                                  } />
+                                  <Route path="/clients" element={
+                                    <Suspense fallback={<TableSkeleton />}>
+                                      <Clients />
+                                    </Suspense>
+                                  } />
+                                  <Route path="/calendar" element={
+                                    <Suspense fallback={<CardSkeleton />}>
+                                      <Calendar />
+                                    </Suspense>
+                                  } />
+                                </Routes>
+                              </div>
+                            </div>
                           </main>
                         </div>
                       </div>
-                      <MobileMenu sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
                     </div>
-                  </PrivateRoute>
-                } />
-
-                {/* Outras rotas privadas */}
-                <Route path="/nova-vistoria" element={
-                  <PrivateRoute>
-                    <Suspense fallback={<CardSkeleton />}>
-                      <NewInspection />
-                    </Suspense>
-                  </PrivateRoute>
-                } />
-                <Route path="/selecao-cliente" element={
-                  <PrivateRoute>
-                    <Suspense fallback={<TableSkeleton />}>
-                      <ClientSelection />
-                    </Suspense>
-                  </PrivateRoute>
-                } />
-                <Route path="/informacoes-basicas" element={
-                  <PrivateRoute>
-                    <Suspense fallback={<CardSkeleton />}>
-                      <BasicInfo />
-                    </Suspense>
-                  </PrivateRoute>
-                } />
-                <Route path="/selecao-telhas" element={
-                  <PrivateRoute>
-                    <Suspense fallback={<CardSkeleton />}>
-                      <TileSelection />
-                    </Suspense>
-                  </PrivateRoute>
-                } />
-                <Route path="/nao-conformidades" element={
-                  <PrivateRoute>
-                    <Suspense fallback={<CardSkeleton />}>
-                      <NonConformities />
-                    </Suspense>
-                  </PrivateRoute>
-                } />
-                <Route path="/registro-fotografico" element={
-                  <PrivateRoute>
-                    <Suspense fallback={<CardSkeleton />}>
-                      <PhotoCapture />
-                    </Suspense>
-                  </PrivateRoute>
-                } />
-                <Route path="/revisao-finalizacao" element={
-                  <PrivateRoute>
-                    <Suspense fallback={<CardSkeleton />}>
-                      <ReviewAndFinalize />
-                    </Suspense>
-                  </PrivateRoute>
-                } />
-                <Route path="/relatorios" element={
-                  <PrivateRoute>
-                    <Suspense fallback={<TableSkeleton />}>
-                      <Reports />
-                    </Suspense>
-                  </PrivateRoute>
-                } />
-                <Route path="/clientes" element={
-                  <PrivateRoute>
-                    <Suspense fallback={<TableSkeleton />}>
-                      <Clients />
-                    </Suspense>
-                  </PrivateRoute>
-                } />
-                <Route path="/calendario" element={
-                  <PrivateRoute>
-                    <Suspense fallback={<CardSkeleton />}>
-                      <Calendar />
-                    </Suspense>
                   </PrivateRoute>
                 } />
               </Routes>
             </div>
           </Router>
-          <SpeedInsights />
         </ToastProvider>
       </AuthProvider>
+      <SpeedInsights />
     </ErrorBoundary>
   );
 }

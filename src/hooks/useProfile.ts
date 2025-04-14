@@ -1,31 +1,45 @@
 import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/clerk-react';
+import { useAuth } from '../lib/auth-context';
+import { get_user_profile } from '../lib/user.service';
+import type { Database } from '../lib/database.types';
+
+type Profile = Database['public']['Tables']['users_profiles']['Row'];
 
 export function useProfile() {
-  const { user } = useUser();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const [profile, set_profile] = useState<Profile | null>(null);
+  const [loading, set_loading] = useState(true);
+  const [error, set_error] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      setLoading(false);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao buscar perfil';
-      setError(message);
-      setLoading(false);
-    }
+    const load_profile = async () => {
+      if (!user) {
+        set_profile(null);
+        set_loading(false);
+        return;
+      }
+
+      try {
+        const user_profile = await get_user_profile(user.id);
+        set_profile(user_profile);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : 'Erro ao buscar perfil';
+        set_error(message);
+      } finally {
+        set_loading(false);
+      }
+    };
+
+    load_profile();
   }, [user]);
 
   return { 
-    profile: user ? {
-      id: user.id,
-      email: user.primaryEmailAddress?.emailAddress,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      imageUrl: user.imageUrl
-    } : null,
+    profile,
     loading,
     error,
-    getProfile: () => Promise.resolve(user)
+    get_profile: async () => {
+      if (!user) return null;
+      return await get_user_profile(user.id);
+    }
   };
 }

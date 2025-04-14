@@ -1,87 +1,76 @@
 import React from 'react';
 import { render, screen, act } from '@testing-library/react';
-import { AuthProvider, useAuth } from './auth.context';
-import { ClerkProvider } from '@clerk/clerk-react';
-
-// Mock do Clerk
-jest.mock('@clerk/clerk-react', () => ({
-  ClerkProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  useUser: () => ({
-    user: {
-      id: 'test-user-id',
-      fullName: 'Test User',
-      imageUrl: 'https://example.com/avatar.jpg',
-      primaryEmailAddress: { emailAddress: 'test@example.com' }
-    },
-    isSignedIn: true
-  }),
-  useClerk: () => ({
-    signOut: jest.fn().mockResolvedValue(undefined),
-    client: {
-      signIn: {
-        create: jest.fn().mockResolvedValue({ status: 'complete' })
-      }
-    }
-  }),
-  useAuth: () => ({
-    getToken: jest.fn().mockResolvedValue('mock-jwt-token')
-  })
-}));
+import { AuthProvider, useAuth } from './auth-context';
 
 // Mock do Supabase
 jest.mock('./supabase', () => ({
   supabase: {
     auth: {
-      setSession: jest.fn().mockResolvedValue({ error: null }),
-      signOut: jest.fn().mockResolvedValue({ error: null })
+      getSession: jest.fn().mockResolvedValue({
+        data: {
+          session: {
+            user: {
+              id: 'test-user-id',
+              email: 'test@example.com',
+              user_metadata: {
+                full_name: 'Test User'
+              }
+            }
+          }
+        },
+        error: null
+      }),
+      signInWithPassword: jest.fn().mockResolvedValue({
+        data: {
+          user: {
+            id: 'test-user-id',
+            email: 'test@example.com'
+          },
+          session: {
+            access_token: 'test-token'
+          }
+        },
+        error: null
+      }),
+      signOut: jest.fn().mockResolvedValue({ error: null }),
+      onAuthStateChange: jest.fn().mockReturnValue({
+        data: { subscription: { unsubscribe: jest.fn() } }
+      })
     }
   }
 }));
 
 // Componente de teste que usa o hook useAuth
 const TestComponent = () => {
-  const { user, isAuthenticated, signIn, signOut } = useAuth();
+  const { user, is_authenticated, loading } = useAuth();
   
   return (
     <div>
       <div data-testid="user-id">{user?.id}</div>
-      <div data-testid="is-authenticated">{isAuthenticated ? 'true' : 'false'}</div>
-      <button 
-        data-testid="sign-in" 
-        onClick={() => signIn('test@example.com', 'password')}
-      >
-        Sign In
-      </button>
-      <button 
-        data-testid="sign-out" 
-        onClick={() => signOut()}
-      >
-        Sign Out
-      </button>
+      <div data-testid="is-authenticated">{is_authenticated ? 'true' : 'false'}</div>
+      <div data-testid="loading">{loading ? 'true' : 'false'}</div>
     </div>
   );
 };
 
-describe('AuthContext', () => {
-  test('provides authentication context', async () => {
+describe('AuthProvider', () => {
+  it('deve fornecer o contexto de autenticação', async () => {
     render(
       <AuthProvider>
         <TestComponent />
       </AuthProvider>
     );
-    
-    // Verificar se o contexto está funcionando
+
+    // Aguardar o carregamento inicial
+    expect(screen.getByTestId('loading')).toHaveTextContent('true');
+
+    // Estado autenticado
+    await act(async () => {
+      await new Promise(resolve => setTimeout(resolve, 0));
+    });
+
     expect(screen.getByTestId('user-id')).toHaveTextContent('test-user-id');
     expect(screen.getByTestId('is-authenticated')).toHaveTextContent('true');
-    
-    // Testar sign in
-    await act(async () => {
-      screen.getByTestId('sign-in').click();
-    });
-    
-    // Testar sign out
-    await act(async () => {
-      screen.getByTestId('sign-out').click();
-    });
+    expect(screen.getByTestId('loading')).toHaveTextContent('false');
   });
-}); 
+});

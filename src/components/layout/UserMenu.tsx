@@ -10,10 +10,10 @@ function classNames(...classes: string[]) {
 
 const UserMenu: React.FC = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, sign_out } = useAuth();
   
-  const handleSignOut = async () => {
-    await signOut();
+  const handle_sign_out = async () => {
+    await sign_out();
     navigate('/login');
   };
 
@@ -64,7 +64,7 @@ const UserMenu: React.FC = () => {
             <Menu.Item>
               {({ active }) => (
                 <button
-                  onClick={handleSignOut}
+                  onClick={handle_sign_out}
                   className={classNames(
                     active ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
                     'group flex items-center w-full px-4 py-2 text-sm text-red-600 hover:text-red-700'

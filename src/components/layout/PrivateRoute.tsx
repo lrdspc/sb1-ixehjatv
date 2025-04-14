@@ -7,7 +7,7 @@ type PrivateRouteProps = {
 };
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { is_authenticated, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -16,7 +16,7 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
     </div>;
   }
 
-  if (!isAuthenticated) {
+  if (!is_authenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

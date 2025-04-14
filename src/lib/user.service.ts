@@ -1,65 +1,42 @@
-import { supabase, setSupabaseToken } from './supabase';
+import { supabase } from './supabase';
 import { Database } from './database.types';
-import { useAuth as useClerkAuth } from '@clerk/clerk-react';
 
 type Profile = Database['public']['Tables']['users_profiles']['Row'];
 type ProfileInsert = Database['public']['Tables']['users_profiles']['Insert'];
 
 /**
- * Hook para obter o token JWT do Clerk para o Supabase
+ * Sincroniza o perfil do usuário no Supabase
  */
-export function useSupabaseToken() {
-  const { getToken } = useClerkAuth();
-  
-  const getSupabaseToken = async () => {
-    try {
-      const token = await getToken({ template: 'supabase' });
-      if (token) {
-        await setSupabaseToken(token);
-      }
-      return token;
-    } catch (error) {
-      console.error('Erro ao obter token para Supabase:', error);
-      return null;
-    }
-  };
-  
-  return { getSupabaseToken };
-}
-
-/**
- * Sincroniza o perfil do usuário no Supabase com os dados do Clerk
- */
-export async function syncUserProfile(userId: string, userData: {
-  fullName?: string;
+export async function sync_user_profile(user_id: string, user_data: {
+  full_name?: string;
   email?: string;
-  avatarUrl?: string;
+  avatar_url?: string;
 }): Promise<Profile | null> {
   try {
     // Verificar se o perfil já existe
-    const { data: existingProfile, error: fetchError } = await supabase
+    const { data: existing_profile, error: fetch_error } = await supabase
       .from('users_profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('id', user_id)
       .single();
 
-    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = Nenhum resultado encontrado
-      console.error('Erro ao buscar perfil:', fetchError);
+    if (fetch_error && fetch_error.code !== 'PGRST116') { // PGRST116 = Nenhum resultado encontrado
+      console.error('Erro ao buscar perfil:', fetch_error);
       return null;
     }
 
-    if (existingProfile) {
+    if (existing_profile) {
       // Atualizar perfil existente
-      const profileData: Partial<Profile> = {
-        full_name: userData.fullName || null,
-        avatar_url: userData.avatarUrl || null,
-        updated_at: new Date().toISOString(),
+      const profile_data: Partial<Profile> = {
+        full_name: user_data.full_name || existing_profile.full_name,
+        avatar_url: user_data.avatar_url || existing_profile.avatar_url,
+        updated_at: new Date().toISOString()
       };
 
       const { data, error } = await supabase
         .from('users_profiles')
-        .update(profileData)
-        .eq('id', userId)
+        .update(profile_data)
+        .eq('id', user_id)
         .select()
         .single();
 
@@ -71,18 +48,18 @@ export async function syncUserProfile(userId: string, userData: {
       return data;
     } else {
       // Criar novo perfil
-      const profileData: ProfileInsert = {
-        id: userId,
-        user_id: userId,
-        full_name: userData.fullName || null,
-        avatar_url: userData.avatarUrl || null,
+      const profile_data: ProfileInsert = {
+        id: user_id,
+        user_id: user_id,
+        full_name: user_data.full_name || null,
+        avatar_url: user_data.avatar_url || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
       
       const { data, error } = await supabase
         .from('users_profiles')
-        .insert(profileData)
+        .insert(profile_data)
         .select()
         .single();
 
@@ -93,8 +70,8 @@ export async function syncUserProfile(userId: string, userData: {
 
       return data;
     }
-  } catch (error) {
-    console.error('Exceção ao sincronizar perfil:', error);
+  } catch (err) {
+    console.error('Erro ao sincronizar perfil:', err);
     return null;
   }
 }
@@ -102,12 +79,12 @@ export async function syncUserProfile(userId: string, userData: {
 /**
  * Obtém o perfil do usuário
  */
-export async function getUserProfile(userId: string): Promise<Profile | null> {
+export async function get_user_profile(user_id: string): Promise<Profile | null> {
   try {
     const { data, error } = await supabase
       .from('users_profiles')
       .select('*')
-      .eq('id', userId)
+      .eq('id', user_id)
       .single();
 
     if (error) {
@@ -116,8 +93,8 @@ export async function getUserProfile(userId: string): Promise<Profile | null> {
     }
 
     return data;
-  } catch (error) {
-    console.error('Exceção ao obter perfil:', error);
+  } catch (err) {
+    console.error('Erro ao obter perfil:', err);
     return null;
   }
 }
@@ -125,18 +102,18 @@ export async function getUserProfile(userId: string): Promise<Profile | null> {
 /**
  * Atualiza o perfil do usuário
  */
-export async function updateUserProfile(
-  userId: string, 
-  profileData: Partial<Omit<Profile, 'id' | 'user_id' | 'created_at'>>
+export async function update_user_profile(
+  user_id: string, 
+  updates: Partial<Profile>
 ): Promise<Profile | null> {
   try {
     const { data, error } = await supabase
       .from('users_profiles')
       .update({
-        ...profileData,
+        ...updates,
         updated_at: new Date().toISOString()
       })
-      .eq('id', userId)
+      .eq('id', user_id)
       .select()
       .single();
 
@@ -146,8 +123,8 @@ export async function updateUserProfile(
     }
 
     return data;
-  } catch (error) {
-    console.error('Exceção ao atualizar perfil:', error);
+  } catch (err) {
+    console.error('Erro ao atualizar perfil:', err);
     return null;
   }
 }
