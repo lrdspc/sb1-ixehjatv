@@ -99,6 +99,11 @@ const Login: React.FC = () => {
                   disabled={loading}
                 />
               </div>
+              <div className="text-right mt-1">
+                <Link to="/forgot-password" className="text-sm text-blue-600 hover:text-blue-500">
+                  Esqueci minha senha
+                </Link>
+              </div>
             </div>
 
             <div>
@@ -150,7 +155,7 @@ const Login: React.FC = () => {
       {/* Footer */}
       <div className="mt-8 text-center">
         <p className="text-xs text-gray-500">
-          © {new Date().getFullYear()} Brasilit. Todos os direitos reservados.
+          {new Date().getFullYear()} Brasilit. Todos os direitos reservados.
         </p>
       </div>
     </div>
