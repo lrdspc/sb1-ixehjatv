@@ -37,7 +37,12 @@
             font-size: 48px;
             margin-bottom: 1rem;
         }
-        .retry-button {
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        .retry-button, .home-button {
             background-color: #2563eb;
             color: white;
             border: none;
@@ -47,7 +52,7 @@
             cursor: pointer;
             transition: background-color 0.2s;
         }
-        .retry-button:hover {
+        .retry-button:hover, .home-button:hover {
             background-color: #1d4ed8;
         }
     </style>
@@ -57,7 +62,11 @@
         <div class="icon">📡</div>
         <h1>Você está offline</h1>
         <p>Não foi possível conectar ao Sistema de Vistorias Brasilit. Por favor, verifique sua conexão com a internet.</p>
-        <button class="retry-button" onclick="window.location.reload()">Tentar novamente</button>
+        <p>Você pode visualizar o conteúdo carregado anteriormente.</p>
+        <div class="button-group">
+            <button class="retry-button" onclick="window.location.reload()">Tentar novamente</button>
+            <button class="home-button" onclick="window.location.href='/'">Página inicial</button>
+        </div>
     </div>
     <script>
         // Check for online status changes

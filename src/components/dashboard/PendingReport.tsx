@@ -1,16 +1,21 @@
 import React from 'react';
 import { Calendar, Clock, FileText } from 'lucide-react';
+import ShareButton from '../ShareButton';
 
 interface PendingReportProps {
   id: string;
   clientName: string;
   inspectionDate: string;
   daysOverdue: number;
+  reportUrl: string;
+  reportTitle: string;
   onClick?: () => void;
 }
 
 const PendingReport: React.FC<PendingReportProps> = ({
   id,
+  reportUrl,
+  reportTitle,
   clientName,
   inspectionDate,
   daysOverdue,
@@ -39,8 +44,18 @@ const PendingReport: React.FC<PendingReportProps> = ({
         </div>
       </div>
       
-      <div className={`px-2 py-1 text-xs rounded-full font-medium ${getUrgencyClass(daysOverdue)}`}>
-        {daysOverdue === 0 ? 'Hoje' : `${daysOverdue} dias`}
+      <div className="flex items-center gap-2">
+        <div className={`px-2 py-1 text-xs rounded-full font-medium ${getUrgencyClass(daysOverdue)}`}>
+          {daysOverdue === 0 ? 'Hoje' : `${daysOverdue} dias`}
+        </div>
+        <ShareButton
+          data={{
+            title: reportTitle,
+            text: `Relatório de vistoria #${id}`,
+            url: reportUrl
+          }}
+          className="text-blue-500 hover:text-blue-700"
+        />
       </div>
     </div>
   );
