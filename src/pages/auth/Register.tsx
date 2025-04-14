@@ -46,24 +46,6 @@ const Register: React.FC = () => {
       }
 
       if (auth_data.user) {
-        try {
-          // Criar perfil do usuário
-          const { error: profile_error } = await supabase
-            .from('users_profiles')
-            .insert({
-              user_id: auth_data.user.id,
-              full_name
-            });
-
-          if (profile_error) {
-            console.error('Erro ao criar perfil:', profile_error);
-            // Continuar mesmo se houver erro no perfil
-          }
-        } catch (profile_err) {
-          console.error('Exceção ao criar perfil:', profile_err);
-          // Continuar mesmo se houver erro no perfil
-        }
-
         // Registro bem sucedido, redirecionar para o login
         navigate('/login', { 
           state: { 
