@@ -8,7 +8,7 @@ const Register: React.FC = () => {
   const [password, set_password] = useState('');
   const [full_name, set_full_name] = useState('');
   const [loading, set_loading] = useState(false);
-  const [error, set_error] = useState<string | null>(null);
+  const [error, set_error] = useState<string | JSX.Element | null>(null);
   const navigate = useNavigate();
 
   const handle_register = async (e: React.FormEvent) => {
@@ -67,8 +67,18 @@ const Register: React.FC = () => {
       console.error('Erro no registro:', err);
       // Mensagens de erro mais amigáveis baseadas em erros comuns
       if (err instanceof Error) {
-        if (err.message.includes('email')) {
-          set_error('Email inválido ou já está em uso. Tente outro email.');
+        if (err.message.includes('email') || err.message.includes('already registered')) {
+          set_error(
+            <div>
+              Email inválido ou já está em uso. 
+              <button 
+                onClick={() => navigate('/login', { state: { email } })}
+                className="ml-2 text-blue-600 hover:underline"
+              >
+                Ir para o login?
+              </button>
+            </div>
+          );
         } else if (err.message.includes('password')) {
           set_error('A senha deve ter pelo menos 6 caracteres.');
         } else {
