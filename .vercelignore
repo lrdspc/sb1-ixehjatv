@@ -1,0 +1,8 @@
+# Ignorar scripts que usam dependências nativas
+scripts/
+# Ignorar arquivos de teste
+**/*.test.js
+**/*.spec.js
+# Ignorar arquivos de configuração de desenvolvimento
+.eslintrc
+.prettierrc

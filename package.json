@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "npm run generate-icons && npm run generate-screenshots && vite build",
@@ -12,7 +16,8 @@
     "generate-screenshots": "node scripts/convert-screenshots.js",
     "pwa:dev": "vite --mode pwa",
     "pwa:build": "npm run generate-icons && npm run generate-screenshots && vite build --mode pwa",
-    "analyze": "vite build --mode analyze"
+    "analyze": "vite build --mode analyze",
+    "vercel-build": "vite build --mode pwa"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
