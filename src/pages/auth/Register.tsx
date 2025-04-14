@@ -12,58 +12,69 @@ const Register: React.FC = () => {
   const [error, set_error] = useState<string | JSX.Element | null>(null);
   const navigate = useNavigate();
 
+  const validate_form = () => {
+    if (!email || !password || !confirm_password || !full_name) {
+      set_error('Por favor, preencha todos os campos.');
+      return false;
+    }
+    if (password !== confirm_password) {
+      set_error('As senhas não coincidem. Por favor, verifique.');
+      return false;
+    }
+    if (password.length < 6) {
+      set_error('A senha deve ter pelo menos 6 caracteres.');
+      return false;
+    }
+    return true;
+  };
+
   const handle_register = async (e: React.FormEvent) => {
     e.preventDefault();
     set_loading(true);
     set_error(null);
 
-    // Validar se as senhas coincidem
-    if (password !== confirm_password) {
-      set_error('As senhas não coincidem. Por favor, verifique.');
+    if (!validate_form()) {
       set_loading(false);
       return;
     }
 
     try {
-      // Registrar usuário com confirmação automática
       const { data: auth_data, error: auth_error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: {
-            full_name
-          },
-          emailRedirectTo: window.location.origin + '/login'
+          data: { full_name },
+          emailRedirectTo: `${window.location.origin}/login`,
         }
       });
 
       if (auth_error) {
-        console.error('Erro de autenticação:', auth_error);
-        console.error('Código de erro:', auth_error.code);
-        console.error('Detalhes do erro:', auth_error.details);
-        console.error('Mensagem completa:', auth_error.message);
+        if (auth_error.message.toLowerCase().includes('timeout')) {
+          set_error('O servidor está demorando para responder. Por favor, tente novamente.');
+          return;
+        }
         throw auth_error;
       }
 
-      if (auth_data.user) {
-        // Registro bem sucedido, redirecionar para o login
+      if (auth_data?.user) {
         navigate('/login', { 
           state: { 
-            message: 'Registro concluído! Por favor, verifique seu email para confirmar sua conta.'
+            message: 'Registro concluído! Por favor, verifique seu email para confirmar sua conta.',
+            email
           }
         });
       } else {
-        // Sem erro, mas também sem usuário - situação inesperada
         set_error('Não foi possível criar a conta. Tente novamente mais tarde.');
       }
     } catch (err) {
       console.error('Erro no registro:', err);
-      // Mensagens de erro mais amigáveis baseadas em erros comuns
+      
       if (err instanceof Error) {
         const errorMessage = err.message.toLowerCase();
         
-        if (errorMessage.includes('already registered') || errorMessage.includes('already in use') || errorMessage.includes('already exists')) {
-          // Email já está em uso
+        if (errorMessage.includes('already registered') || 
+            errorMessage.includes('already in use') || 
+            errorMessage.includes('already exists')) {
           set_error(
             <div>
               Este email já está registrado. 
@@ -76,17 +87,12 @@ const Register: React.FC = () => {
             </div>
           );
         } else if (errorMessage.includes('email') && errorMessage.includes('invalid')) {
-          // Email inválido
           set_error('O formato do email é inválido. Por favor, verifique.');
-        } else if (errorMessage.includes('password')) {
-          set_error('A senha deve ter pelo menos 6 caracteres.');
         } else {
-          // Log detalhado para depuração
-          console.error('Erro específico:', err.message);
-          set_error(`Erro ao criar conta: ${err.message}`);
+          set_error('Erro ao criar conta. Por favor, tente novamente.');
         }
       } else {
-        set_error('Erro ao criar conta. Tente novamente mais tarde.');
+        set_error('Erro inesperado. Por favor, tente novamente mais tarde.');
       }
     } finally {
       set_loading(false);

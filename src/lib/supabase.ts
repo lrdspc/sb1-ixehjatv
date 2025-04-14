@@ -1,7 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './database.types';
 
-// Obter variáveis de ambiente
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
@@ -9,25 +8,26 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Supabase URL ou chave anônima não configuradas. Verifique seu arquivo .env');
 }
 
-// Criar o cliente Supabase com configurações otimizadas
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: true, // Persistir sessão no localStorage
-    autoRefreshToken: true, // Atualizar tokens automaticamente
-    storageKey: 'brasilit-auth-token'
+    persistSession: true,
+    autoRefreshToken: true,
+    storageKey: 'brasilit-auth-token',
+    detectSessionInUrl: true,
+    flowType: 'pkce'
   },
-  realtime: {
-    params: {
-      eventsPerSecond: 10
-    }
+  db: {
+    schema: 'public'
   },
   global: {
     headers: {
       'x-application-name': 'brasilit-inspection-app'
     }
   },
-  db: {
-    schema: 'public'
+  realtime: {
+    params: {
+      eventsPerSecond: 10
+    }
   }
 });
 
