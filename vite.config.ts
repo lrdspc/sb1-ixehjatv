@@ -251,7 +251,12 @@ export default defineConfig(({ mode }) => {
             supabase: ['@supabase/supabase-js'],
             ui: ['lucide-react', 'framer-motion']
           }
-        }
+        },
+        // Excluir explicitamente qualquer código relacionado ao Clerk
+        external: [
+          /@clerk\/.*/, 
+          /clerk.*/
+        ]
       },
       // Melhorar análise de build
       reportCompressedSize: true,
