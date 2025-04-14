@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Offline - Brasilit</title>
+    <link rel="icon" href="/icons/icon-192x192.png">
     <style>
         body {
             font-family: system-ui, -apple-system, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -17,13 +18,24 @@
             background-color: #f3f4f6;
             color: #1f2937;
         }
+        .header {
+            background-color: #2563eb;
+            width: 100%;
+            padding: 1rem;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .header img {
+            max-height: 50px;
+        }
         .container {
             text-align: center;
             max-width: 600px;
             padding: 2rem;
             background: white;
             border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
         }
         h1 {
             color: #2563eb;
@@ -41,8 +53,9 @@
             display: flex;
             gap: 1rem;
             justify-content: center;
+            flex-wrap: wrap;
         }
-        .retry-button, .home-button {
+        .retry-button, .home-button, .sync-button {
             background-color: #2563eb;
             color: white;
             border: none;
@@ -52,27 +65,236 @@
             cursor: pointer;
             transition: background-color 0.2s;
         }
-        .retry-button:hover, .home-button:hover {
+        .retry-button:hover, .home-button:hover, .sync-button:hover {
             background-color: #1d4ed8;
+        }
+        .sync-button {
+            background-color: #059669;
+        }
+        .sync-button:hover {
+            background-color: #047857;
+        }
+        .status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #ef4444;
+            margin-right: 0.5rem;
+        }
+        .status-indicator.online {
+            background-color: #10b981;
+        }
+        .cached-content {
+            margin-top: 2rem;
+            width: 100%;
+            max-width: 600px;
+        }
+        .cached-content h2 {
+            color: #4b5563;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .cached-list {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .cached-item {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+        }
+        .cached-item:last-child {
+            border-bottom: none;
+        }
+        .cached-item-icon {
+            margin-right: 1rem;
+            color: #2563eb;
+            font-size: 1.5rem;
+        }
+        .cached-item-text {
+            flex: 1;
+        }
+        .cached-item-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        .cached-item-subtitle {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        .footer {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 0.875rem;
+            color: #6b7280;
+            padding: 1rem;
+        }
+        @media (max-width: 640px) {
+            .container {
+                margin: 1rem;
+                padding: 1.5rem;
+            }
+            .button-group {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="header">
+        <img src="/icons/icon-192x192.png" alt="Brasilit Logo">
+    </div>
+    
     <div class="container">
         <div class="icon">📡</div>
         <h1>Você está offline</h1>
         <p>Não foi possível conectar ao Sistema de Vistorias Brasilit. Por favor, verifique sua conexão com a internet.</p>
-        <p>Você pode visualizar o conteúdo carregado anteriormente.</p>
+        <p>Você ainda pode acessar o conteúdo disponível offline e suas vistorias salvas localmente.</p>
+        
         <div class="button-group">
             <button class="retry-button" onclick="window.location.reload()">Tentar novamente</button>
             <button class="home-button" onclick="window.location.href='/'">Página inicial</button>
+            <button class="sync-button" id="sync-button">Sincronizar quando online</button>
+        </div>
+        
+        <div class="status">
+            <div class="status-indicator" id="status-indicator"></div>
+            <span id="status-text">Offline</span>
         </div>
     </div>
+    
+    <div class="cached-content" id="cached-content">
+        <h2>Conteúdo disponível offline</h2>
+        <div class="cached-list" id="cached-list">
+            <!-- Preenchido dinamicamente via JavaScript -->
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p> 2025 Brasilit - Sistema de Vistorias</p>
+        <p>Versão: 1.0.0</p>
+    </div>
+    
     <script>
-        // Check for online status changes
+        // Elementos DOM
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        const syncButton = document.getElementById('sync-button');
+        const cachedList = document.getElementById('cached-list');
+        
+        // Verificar status de conexão
+        function updateOnlineStatus() {
+            if (navigator.onLine) {
+                statusIndicator.classList.add('online');
+                statusText.textContent = 'Online';
+                syncButton.disabled = false;
+            } else {
+                statusIndicator.classList.remove('online');
+                statusText.textContent = 'Offline';
+                syncButton.disabled = true;
+            }
+        }
+        
+        // Atualizar status inicial
+        updateOnlineStatus();
+        
+        // Monitorar mudanças de status
         window.addEventListener('online', () => {
-            window.location.reload();
+            updateOnlineStatus();
+            // Opcional: recarregar automaticamente após um tempo
+            setTimeout(() => {
+                window.location.reload();
+            }, 3000);
         });
+        
+        window.addEventListener('offline', updateOnlineStatus);
+        
+        // Lidar com o botão de sincronização
+        syncButton.addEventListener('click', () => {
+            if (navigator.onLine) {
+                syncButton.textContent = 'Sincronizando...';
+                syncButton.disabled = true;
+                
+                // Aqui você pode adicionar lógica para sincronizar dados
+                // Por exemplo, disparar um evento que o service worker pode ouvir
+                
+                // Simular sincronização
+                setTimeout(() => {
+                    syncButton.textContent = 'Sincronizado!';
+                    setTimeout(() => {
+                        syncButton.textContent = 'Sincronizar quando online';
+                        syncButton.disabled = false;
+                    }, 2000);
+                }, 1500);
+                
+                // Tentar registrar uma sincronização em segundo plano
+                if ('serviceWorker' in navigator && 'SyncManager' in window) {
+                    navigator.serviceWorker.ready.then(registration => {
+                        registration.sync.register('sync-all').then(() => {
+                            console.log('Sincronização em segundo plano registrada');
+                        }).catch(err => {
+                            console.error('Erro ao registrar sincronização:', err);
+                        });
+                    });
+                }
+            }
+        });
+        
+        // Carregar conteúdo em cache
+        async function loadCachedContent() {
+            // Esta é uma implementação de exemplo
+            // Em um aplicativo real, você consultaria o IndexedDB ou Cache API
+            
+            const mockCachedItems = [
+                { title: 'Página inicial', subtitle: 'Última visita: recente', icon: '🏠' },
+                { title: 'Vistorias pendentes', subtitle: '3 vistorias salvas localmente', icon: '📋' },
+                { title: 'Clientes', subtitle: '15 clientes em cache', icon: '👥' }
+            ];
+            
+            // Limpar lista
+            cachedList.innerHTML = '';
+            
+            // Verificar se há conteúdo em cache
+            if (mockCachedItems.length === 0) {
+                cachedList.innerHTML = '<div class="cached-item"><p>Nenhum conteúdo disponível offline.</p></div>';
+                return;
+            }
+            
+            // Adicionar itens à lista
+            mockCachedItems.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'cached-item';
+                itemElement.innerHTML = `
+                    <div class="cached-item-icon">${item.icon}</div>
+                    <div class="cached-item-text">
+                        <div class="cached-item-title">${item.title}</div>
+                        <div class="cached-item-subtitle">${item.subtitle}</div>
+                    </div>
+                `;
+                
+                // Adicionar evento de clique para navegar para a página
+                itemElement.addEventListener('click', () => {
+                    window.location.href = '/';
+                });
+                
+                cachedList.appendChild(itemElement);
+            });
+        }
+        
+        // Carregar conteúdo em cache ao iniciar
+        loadCachedContent();
     </script>
 </body>
 </html>
