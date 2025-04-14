@@ -162,3 +162,42 @@ O backend é gerenciado pelo Supabase e inclui:
 3. Commit suas mudanças (`git commit -m 'Adiciona nova feature'`)
 4. Push para a branch (`git push origin feature/nova-feature`)
 5. Abra um Pull Request
+
+## Integration Guide (English)
+
+This project integrates:
+- Frontend: Vercel
+- Backend: Supabase 
+- Authentication: Clerk
+- Version Control: GitHub
+- Development: VSCode
+
+### Environment Variables
+Create a `.env` file based on `.env.example`:
+```bash
+cp .env.example .env
+```
+
+Required variables:
+- `VITE_CLERK_PUBLISHABLE_KEY`: From Clerk dashboard
+- `VITE_SUPABASE_URL`: From Supabase project settings
+- `VITE_SUPABASE_ANON_KEY`: From Supabase project settings
+
+### Key Integration Points
+1. **Frontend (Vercel) ↔ Supabase API**
+   - Uses Supabase JavaScript client
+   - Environment variables configured in Vercel
+
+2. **Clerk Auth ↔ Supabase JWT**
+   - JWT template configured in `src/lib/clerk.config.ts`
+   - Token passed to Supabase via `ClerkSupabaseIntegration` component
+
+3. **GitHub ↔ Vercel CI/CD**
+   - Automatic deployments on push
+   - Preview deployments for pull requests
+
+### Development Workflow
+1. Code in VSCode
+2. Push to GitHub
+3. Automatic deployment to Vercel
+4. Database changes via Supabase migrations

@@ -45,7 +45,7 @@ export async function setSupabaseToken(token: string | null) {
 // Função para verificar a conexão com o Supabase
 export async function checkSupabaseConnection(): Promise<boolean> {
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('clients')
       .select('id')
       .limit(1);
