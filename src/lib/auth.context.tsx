@@ -72,7 +72,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Função para obter a URL base do aplicativo (sempre a URL de produção)
   const getBaseUrl = () => {
-    // Usar o domínio de produção configurado
+    // Em desenvolvimento, usar localhost
+    if (import.meta.env.DEV) {
+      return 'http://localhost:5173';
+    }
+    // Em produção, usar a URL de produção
     return 'https://projeto-one.lrds.me';
   };
 
@@ -132,13 +136,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       setLoading(true);
       
+      console.log('Iniciando processo de registro...');
+      
       // Validar entrada
       if (!email || !password || !fullName) {
         throw new Error('Email, senha e nome completo são obrigatórios');
       }
       
       const baseUrl = getBaseUrl();
+      console.log('URL base para redirecionamento:', baseUrl);
       
+      console.log('Tentando registrar usuário no Supabase...');
       // Registrar o usuário no Supabase Auth com os dados do perfil nos metadados
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -152,7 +160,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       });
 
+      console.log('Resposta do Supabase:', { data, signUpError });
+
       if (signUpError) {
+        console.error('Erro retornado pelo Supabase:', signUpError);
         // Traduzir mensagens de erro comuns
         if (signUpError.message.includes('User already registered')) {
           throw new Error('Este email já está registrado. Tente fazer login.');
@@ -162,6 +173,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       if (data.user) {
+        console.log('Usuário criado com sucesso, criando perfil...');
         try {
           // Tentar criar perfil do usuário na tabela users_profiles
           const { error: profileError } = await supabase
@@ -174,16 +186,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
             ]);
 
-          // Se houver erro na criação do perfil, apenas registrar no console
-          // mas não impedir o registro do usuário, já que os dados estão nos metadados
           if (profileError) {
             console.warn('Não foi possível criar o perfil na tabela users_profiles:', profileError);
             console.info('Os dados do usuário foram salvos nos metadados do Auth.');
+          } else {
+            console.log('Perfil criado com sucesso');
           }
         } catch (profileErr) {
           console.warn('Erro ao acessar a tabela users_profiles:', profileErr);
         }
         
+        console.log('Processo de registro concluído com sucesso');
         return { success: true };
       }
       

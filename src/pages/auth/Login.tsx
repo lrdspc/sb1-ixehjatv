@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Navigate, Link, useLocation } from 'react-router-dom';
 import { Zap, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../lib/auth.context';
+import SupabaseTest from '../../components/SupabaseTest'; // Importação temporária
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -61,6 +62,8 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      <SupabaseTest /> {/* Componente de teste temporário */}
+      
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <div className="flex items-center space-x-2">
