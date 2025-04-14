@@ -27,12 +27,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Função para inicializar a autenticação
     const initializeAuth = async () => {
       try {
         setLoading(true);
         
-        // Obter sessão inicial
         const { data, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
@@ -44,17 +42,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(data.session?.user ?? null);
         setIsAuthenticated(!!data.session);
         
-        // Configurar listener para mudanças de estado de autenticação
-        const {
-          data: { subscription },
-        } = supabase.auth.onAuthStateChange((_event, session) => {
-          console.log('Estado de autenticação alterado:', _event);
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+          console.log('Estado de autenticação alterado:', event);
+          
+          if (event === 'SIGNED_IN') {
+            // Quando o usuário faz login, verificamos se precisamos criar o perfil
+            if (session?.user) {
+              try {
+                const { data: profile, error: profileCheckError } = await supabase
+                  .from('users_profiles')
+                  .select('*')
+                  .eq('user_id', session.user.id)
+                  .single();
+                
+                if (!profile && !profileCheckError) {
+                  // Perfil não existe, vamos criar
+                  const { error: createProfileError } = await supabase
+                    .from('users_profiles')
+                    .insert({
+                      user_id: session.user.id,
+                      full_name: session.user.user_metadata.full_name || 'Usuário'
+                    });
+                    
+                  if (createProfileError) {
+                    console.warn('Erro ao criar perfil após confirmação:', createProfileError);
+                  }
+                }
+              } catch (err) {
+                console.warn('Erro ao verificar/criar perfil:', err);
+              }
+            }
+          }
+          
           setSession(session);
           setUser(session?.user ?? null);
           setIsAuthenticated(!!session);
         });
         
-        // Marcar autenticação como inicializada
         setAuthInitialized(true);
         
         return () => subscription.unsubscribe();
@@ -70,13 +94,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
   }, []);
 
-  // Função para obter a URL base do aplicativo (sempre a URL de produção)
   const getBaseUrl = () => {
-    // Em desenvolvimento, usar localhost
     if (import.meta.env.DEV) {
       return 'http://localhost:5173';
     }
-    // Em produção, usar a URL de produção
     return 'https://projeto-one.lrds.me';
   };
 
@@ -87,7 +108,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       console.log('Iniciando processo de login...');
       
-      // Validar entrada
       if (!email || !password) {
         console.log('Campos vazios detectados');
         throw new Error('Por favor, preencha todos os campos');
@@ -103,11 +123,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         console.error('Erro retornado pelo Supabase:', error);
-        // Traduzir mensagens de erro comuns
         if (error.message.includes('Invalid login credentials')) {
           throw new Error('Credenciais incorretas. Verifique seu email e senha.');
         } else if (error.message.includes('Email not confirmed')) {
-          throw new Error('Email não confirmado. Por favor, verifique sua caixa de entrada.');
+          throw new Error('Email não confirmado. Por favor, verifique sua caixa de entrada e spam.');
         } else if (error.message.includes('Invalid email')) {
           throw new Error('Email inválido. Por favor, verifique o formato do email.');
         } else {
@@ -116,7 +135,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       console.log('Login bem-sucedido, atualizando estado...');
-      // Atualizar estado após login bem-sucedido
       setSession(data.session);
       setUser(data.session?.user ?? null);
       setIsAuthenticated(!!data.session);
@@ -126,6 +144,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const errorMessage = err instanceof Error ? err.message : 'Erro ao fazer login. Tente novamente.';
       console.error('Erro durante o processo de login:', err);
       setError(errorMessage);
+      throw err; // Propagar o erro para que o componente possa tratá-lo
     } finally {
       setLoading(false);
     }
@@ -138,7 +157,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       console.log('Iniciando processo de registro...');
       
-      // Validar entrada
       if (!email || !password || !fullName) {
         throw new Error('Email, senha e nome completo são obrigatórios');
       }
@@ -147,7 +165,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('URL base para redirecionamento:', baseUrl);
       
       console.log('Tentando registrar usuário no Supabase...');
-      // Registrar o usuário no Supabase Auth com os dados do perfil nos metadados
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
@@ -164,7 +181,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (signUpError) {
         console.error('Erro retornado pelo Supabase:', signUpError);
-        // Traduzir mensagens de erro comuns
         if (signUpError.message.includes('User already registered')) {
           throw new Error('Este email já está registrado. Tente fazer login.');
         } else {
@@ -175,7 +191,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data.user) {
         console.log('Usuário criado com sucesso, criando perfil...');
         try {
-          // Tentar criar perfil do usuário na tabela users_profiles
           const { error: profileError } = await supabase
             .from('users_profiles')
             .insert([
@@ -218,7 +233,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      // Limpar estado após logout
       setSession(null);
       setUser(null);
       setIsAuthenticated(false);
@@ -294,7 +308,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setError(null);
       setLoading(true);
       
-      // Se tiver email para atualizar
       if (data.email && user) {
         const { error: emailError } = await supabase.auth.updateUser({
           email: data.email
@@ -303,7 +316,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (emailError) throw emailError;
       }
       
-      // Se tiver nome para atualizar
       if (data.fullName && user) {
         const { error: profileError } = await supabase
           .from('users_profiles')
@@ -324,7 +336,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Só renderizar os filhos quando a autenticação estiver inicializada
   if (!authInitialized) {
     return (
       <div className="min-h-screen flex items-center justify-center">

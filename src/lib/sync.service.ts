@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './supabase';
 import { 
   initDB, 
   getNextSyncItem, 
@@ -6,11 +6,6 @@ import {
   updateSyncAttempt,
   updateItem
 } from './db';
-
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Maximum number of sync attempts
 const MAX_SYNC_ATTEMPTS = 5;
