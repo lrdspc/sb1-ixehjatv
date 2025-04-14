@@ -17,29 +17,41 @@ const Register: React.FC = () => {
     set_error(null);
 
     try {
-      // Registrar usuário
+      // Registrar usuário com confirmação automática
       const { data: auth_data, error: auth_error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name
-          }
+          },
+          emailRedirectTo: window.location.origin + '/login'
         }
       });
 
-      if (auth_error) throw auth_error;
+      if (auth_error) {
+        console.error('Erro de autenticação:', auth_error);
+        throw auth_error;
+      }
 
       if (auth_data.user) {
-        // Criar perfil do usuário
-        const { error: profile_error } = await supabase
-          .from('users_profiles')
-          .insert({
-            user_id: auth_data.user.id,
-            full_name
-          });
+        try {
+          // Criar perfil do usuário
+          const { error: profile_error } = await supabase
+            .from('users_profiles')
+            .insert({
+              user_id: auth_data.user.id,
+              full_name
+            });
 
-        if (profile_error) throw profile_error;
+          if (profile_error) {
+            console.error('Erro ao criar perfil:', profile_error);
+            // Continuar mesmo se houver erro no perfil
+          }
+        } catch (profile_err) {
+          console.error('Exceção ao criar perfil:', profile_err);
+          // Continuar mesmo se houver erro no perfil
+        }
 
         // Registro bem sucedido, redirecionar para o login
         navigate('/login', { 
@@ -47,10 +59,24 @@ const Register: React.FC = () => {
             message: 'Registro concluído! Por favor, verifique seu email para confirmar sua conta.'
           }
         });
+      } else {
+        // Sem erro, mas também sem usuário - situação inesperada
+        set_error('Não foi possível criar a conta. Tente novamente mais tarde.');
       }
     } catch (err) {
       console.error('Erro no registro:', err);
-      set_error(err instanceof Error ? err.message : 'Erro ao criar conta');
+      // Mensagens de erro mais amigáveis baseadas em erros comuns
+      if (err instanceof Error) {
+        if (err.message.includes('email')) {
+          set_error('Email inválido ou já está em uso. Tente outro email.');
+        } else if (err.message.includes('password')) {
+          set_error('A senha deve ter pelo menos 6 caracteres.');
+        } else {
+          set_error(err.message);
+        }
+      } else {
+        set_error('Erro ao criar conta. Tente novamente mais tarde.');
+      }
     } finally {
       set_loading(false);
     }
