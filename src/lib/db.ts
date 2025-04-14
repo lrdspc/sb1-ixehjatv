@@ -1,4 +1,4 @@
-import { openDB, DBSchema, IDBPDatabase } from 'idb';
+import { openDB, DBSchema, IDBPDatabase, IDBPCursorWithValue } from 'idb';
 
 interface BrasilitDB extends DBSchema {
   inspections: {
@@ -44,54 +44,90 @@ interface BrasilitDB extends DBSchema {
 }
 
 let dbPromise: Promise<IDBPDatabase<BrasilitDB>> | null = null;
+let isUpgrading = false;
 
 export const initDB = async () => {
   if (!dbPromise) {
-    dbPromise = openDB<BrasilitDB>('brasilit-db', 2, {
-      upgrade(db, oldVersion) {
-        if (oldVersion < 1) {
-          // Inspections store
-          const inspectionsStore = db.createObjectStore('inspections', { keyPath: 'id' });
-          inspectionsStore.createIndex('by-status', 'status');
-          inspectionsStore.createIndex('by-date', 'date');
-
-          // Clients store
-          const clientsStore = db.createObjectStore('clients', { keyPath: 'id' });
-          clientsStore.createIndex('by-name', 'name');
-
-          // Sync queue store
-          db.createObjectStore('syncQueue', { keyPath: 'id' });
+    dbPromise = new Promise(async (resolve, reject) => {
+      try {
+        if (isUpgrading) {
+          // Aguardar se já estiver em upgrade
+          while (isUpgrading) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+          return resolve(await openDB<BrasilitDB>('brasilit-db', 2));
         }
-        
-        if (oldVersion < 2) {
-          // Adicionar o campo type para as entradas existentes na syncQueue
-          const tx = db.transaction('syncQueue', 'readwrite');
-          tx.store.openCursor().then(function updateEntries(cursor) {
-            if (!cursor) return;
-            const value = cursor.value;
-            if (!value.type) {
-              value.type = value.table; // Use table como valor padrão para type
+
+        isUpgrading = true;
+        const db = await openDB<BrasilitDB>('brasilit-db', 2, {
+          upgrade(db, oldVersion) {
+            if (oldVersion < 1) {
+              // Inspections store
+              const inspectionsStore = db.createObjectStore('inspections', { keyPath: 'id' });
+              inspectionsStore.createIndex('by-status', 'status');
+              inspectionsStore.createIndex('by-date', 'date');
+
+              // Clients store
+              const clientsStore = db.createObjectStore('clients', { keyPath: 'id' });
+              clientsStore.createIndex('by-name', 'name');
+
+              // Sync queue store
+              db.createObjectStore('syncQueue', { keyPath: 'id' });
             }
-            cursor.update(value);
-            return cursor.continue().then(updateEntries);
-          });
-        }
-      },
+            
+            if (oldVersion < 2) {
+              // Adicionar o campo type para as entradas existentes na syncQueue
+              const tx = db.transaction('syncQueue', 'readwrite');
+              return new Promise<void>((resolve) => {
+                tx.store.openCursor().then(function updateEntries(cursor: IDBPCursorWithValue<BrasilitDB, ["syncQueue"], "syncQueue", unknown, "readwrite"> | null): Promise<void> {
+                  try {
+                    if (!cursor) {
+                      resolve();
+                      return;
+                    }
+                    const value = cursor.value;
+                    if (!value.type) {
+                      value.type = value.table;
+                    }
+                    cursor.update(value);
+                    return cursor.continue().then(updateEntries) as Promise<void>;
+                  } catch (error) {
+                    console.error('Error updating cursor:', error);
+                    resolve();
+                  }
+                });
+              });
+            }
+          },
+          blocked() {
+            console.warn('Database blocked - waiting to upgrade');
+          },
+          blocking() {
+            console.warn('Database needs to close for upgrade');
+          }
+        });
+        isUpgrading = false;
+        resolve(db);
+      } catch (error) {
+        isUpgrading = false;
+        console.error('Error initializing database:', error);
+        reject(error);
+      }
     });
   }
   return dbPromise;
 };
 
 // Generic CRUD operations
-export const addItem = async <T extends keyof BrasilitDB>(
+export const addItem = async <T extends 'inspections' | 'clients' | 'syncQueue'>(
   storeName: T,
   item: BrasilitDB[T]['value']
-) => {
+): Promise<string> => {
   const db = await initDB();
   return db.add(storeName, item);
 };
 
-export const getItem = async <T extends keyof BrasilitDB>(
+export const getItem = async <T extends 'inspections' | 'clients' | 'syncQueue'>(
   storeName: T,
   id: string
 ): Promise<BrasilitDB[T]['value'] | undefined> => {
@@ -99,25 +135,25 @@ export const getItem = async <T extends keyof BrasilitDB>(
   return db.get(storeName, id);
 };
 
-export const getAllItems = async <T extends keyof BrasilitDB>(
+export const getAllItems = async <T extends 'inspections' | 'clients' | 'syncQueue'>(
   storeName: T
 ): Promise<BrasilitDB[T]['value'][]> => {
   const db = await initDB();
   return db.getAll(storeName);
 };
 
-export const updateItem = async <T extends keyof BrasilitDB>(
+export const updateItem = async <T extends 'inspections' | 'clients' | 'syncQueue'>(
   storeName: T,
   item: BrasilitDB[T]['value']
-) => {
+): Promise<string> => {
   const db = await initDB();
   return db.put(storeName, item);
 };
 
-export const deleteItem = async <T extends keyof BrasilitDB>(
+export const deleteItem = async <T extends 'inspections' | 'clients' | 'syncQueue'>(
   storeName: T,
   id: string
-) => {
+): Promise<void> => {
   const db = await initDB();
   return db.delete(storeName, id);
 };

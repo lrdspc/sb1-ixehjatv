@@ -138,8 +138,8 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 1000
     },
     server: {
-      port: 3000,
-      strictPort: true,
+      port: 5173,
+      strictPort: false,
       open: true,
       // Otimização para desenvolvimento
       hmr: {
