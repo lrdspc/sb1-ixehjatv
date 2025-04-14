@@ -1,10 +1,7 @@
 import { useState, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
-import type { Database } from '../lib/database.types';
-
-type Inspection = Database['public']['Tables']['inspections']['Row'];
-type InsertInspection = Database['public']['Tables']['inspections']['Insert'];
-type UpdateInspection = Database['public']['Tables']['inspections']['Update'];
+import { inspectionQueries } from '../lib/supabase-queries';
+import { handleError } from '../lib/error-handler';
+import { Inspection, InsertInspection, UpdateInspection } from '../types/inspections';
 
 export function useInspections() {
   const [loading, setLoading] = useState(false);
@@ -15,25 +12,13 @@ export function useInspections() {
       setLoading(true);
       setError(null);
       
-      const { data, error } = await supabase
-        .from('inspections')
-        .select(`
-          *,
-          clients (
-            id,
-            name,
-            address,
-            city,
-            state
-          )
-        `)
-        .order('inspection_date', { ascending: false });
+      const { data, error } = await inspectionQueries.getAll();
       
       if (error) throw error;
       
-      return data;
+      return data as Inspection[];
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao buscar vistorias';
+      const message = handleError(err, 'Erro ao buscar vistorias');
       setError(message);
       return [];
     } finally {
@@ -46,49 +31,13 @@ export function useInspections() {
       setLoading(true);
       setError(null);
       
-      const { data, error } = await supabase
-        .from('inspections')
-        .select(`
-          *,
-          clients (
-            id,
-            name,
-            address,
-            city,
-            state,
-            contact_name,
-            contact_phone,
-            contact_email
-          ),
-          inspection_tiles (
-            id,
-            line,
-            thickness,
-            dimensions,
-            quantity,
-            area
-          ),
-          nonconformities (
-            id,
-            title,
-            description,
-            notes,
-            inspection_photos (
-              id,
-              category,
-              caption,
-              photo_url
-            )
-          )
-        `)
-        .eq('id', id)
-        .single();
+      const { data, error } = await inspectionQueries.getById(id);
       
       if (error) throw error;
       
-      return data;
+      return data as Inspection;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao buscar vistoria';
+      const message = handleError(err, 'Erro ao buscar vistoria');
       setError(message);
       return null;
     } finally {
@@ -101,17 +50,13 @@ export function useInspections() {
       setLoading(true);
       setError(null);
       
-      const { data, error } = await supabase
-        .from('inspections')
-        .insert([inspection])
-        .select()
-        .single();
+      const { data, error } = await inspectionQueries.create(inspection);
       
       if (error) throw error;
       
-      return data;
+      return data as Inspection;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao criar vistoria';
+      const message = handleError(err, 'Erro ao criar vistoria');
       setError(message);
       return null;
     } finally {
@@ -124,18 +69,13 @@ export function useInspections() {
       setLoading(true);
       setError(null);
       
-      const { data, error } = await supabase
-        .from('inspections')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+      const { data, error } = await inspectionQueries.update(id, updates);
       
       if (error) throw error;
       
-      return data;
+      return data as Inspection;
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao atualizar vistoria';
+      const message = handleError(err, 'Erro ao atualizar vistoria');
       setError(message);
       return null;
     } finally {
@@ -148,17 +88,13 @@ export function useInspections() {
       setLoading(true);
       setError(null);
       
-      const { data, error } = await supabase
-        .from('inspections')
-        .select('*')
-        .eq('client_id', clientId)
-        .order('inspection_date', { ascending: false });
+      const { data, error } = await inspectionQueries.getByClientId(clientId);
       
       if (error) throw error;
       
-      return data;
+      return data as Inspection[];
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Erro ao buscar vistorias do cliente';
+      const message = handleError(err, 'Erro ao buscar vistorias do cliente');
       setError(message);
       return [];
     } finally {
