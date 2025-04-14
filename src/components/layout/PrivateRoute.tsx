@@ -1,31 +1,31 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../lib/auth.context';
 
-interface PrivateRouteProps {
+type PrivateRouteProps = {
   children: React.ReactNode;
-}
+};
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const location = useLocation();
 
-  // Mostrar um indicador de carregamento enquanto verificamos a autenticação
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
+  // Verificar se o usuário está autenticado
+  if (!isAuthenticated) {
+    // Redirecionar para a página de login, armazenando a localização atual
+    // para redirecionar de volta após o login
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Redirecionar para login se não estiver autenticado
-  if (!isAuthenticated) {
-    // Usar o state para passar a localização original, permitindo redirecionamento após login
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
-  }
+  // Criar um perfil de usuário no primeiro login
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Aqui poderíamos criar/atualizar o perfil do usuário no Supabase
+      // Isso pode ser implementado posteriormente se necessário
+    }
+  }, [isAuthenticated, user]);
 
   return <>{children}</>;
-}
+};
 
 export default PrivateRoute;

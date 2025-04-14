@@ -32,11 +32,13 @@ interface BrasilitDB extends DBSchema {
     key: string;
     value: {
       id: string;
+      type: string;
       table: string;
       action: 'create' | 'update' | 'delete';
       data: any;
       attempts: number;
       createdAt: string;
+      timestamp?: string;
     };
   };
 }
@@ -45,19 +47,35 @@ let dbPromise: Promise<IDBPDatabase<BrasilitDB>> | null = null;
 
 export const initDB = async () => {
   if (!dbPromise) {
-    dbPromise = openDB<BrasilitDB>('brasilit-db', 1, {
-      upgrade(db) {
-        // Inspections store
-        const inspectionsStore = db.createObjectStore('inspections', { keyPath: 'id' });
-        inspectionsStore.createIndex('by-status', 'status');
-        inspectionsStore.createIndex('by-date', 'date');
+    dbPromise = openDB<BrasilitDB>('brasilit-db', 2, {
+      upgrade(db, oldVersion) {
+        if (oldVersion < 1) {
+          // Inspections store
+          const inspectionsStore = db.createObjectStore('inspections', { keyPath: 'id' });
+          inspectionsStore.createIndex('by-status', 'status');
+          inspectionsStore.createIndex('by-date', 'date');
 
-        // Clients store
-        const clientsStore = db.createObjectStore('clients', { keyPath: 'id' });
-        clientsStore.createIndex('by-name', 'name');
+          // Clients store
+          const clientsStore = db.createObjectStore('clients', { keyPath: 'id' });
+          clientsStore.createIndex('by-name', 'name');
 
-        // Sync queue store
-        db.createObjectStore('syncQueue', { keyPath: 'id' });
+          // Sync queue store
+          db.createObjectStore('syncQueue', { keyPath: 'id' });
+        }
+        
+        if (oldVersion < 2) {
+          // Adicionar o campo type para as entradas existentes na syncQueue
+          const tx = db.transaction('syncQueue', 'readwrite');
+          tx.store.openCursor().then(function updateEntries(cursor) {
+            if (!cursor) return;
+            const value = cursor.value;
+            if (!value.type) {
+              value.type = value.table; // Use table como valor padrão para type
+            }
+            cursor.update(value);
+            return cursor.continue().then(updateEntries);
+          });
+        }
       },
     });
   }
@@ -128,18 +146,46 @@ export const getClientsByName = async (name: string) => {
 export const addToSyncQueue = async (
   table: string,
   action: 'create' | 'update' | 'delete',
-  data: any
+  data: any,
+  type?: string
 ) => {
   const db = await initDB();
   const id = `${table}-${data.id}-${Date.now()}`;
   return db.add('syncQueue', {
     id,
+    type: type || table,
     table,
     action,
     data,
     attempts: 0,
     createdAt: new Date().toISOString(),
   });
+};
+
+export const addSyncItem = async (item: {
+  type: string;
+  data: any;
+  timestamp: string;
+  attempts: number;
+}) => {
+  const db = await initDB();
+  const id = `${item.type}-${item.data.id || Date.now()}-${Date.now()}`;
+  return db.add('syncQueue', {
+    id,
+    type: item.type,
+    table: item.type,
+    action: 'update',
+    data: item.data,
+    attempts: item.attempts,
+    createdAt: new Date().toISOString(),
+    timestamp: item.timestamp
+  });
+};
+
+export const getSyncItemsByType = async (type: string) => {
+  const db = await initDB();
+  const allItems = await db.getAll('syncQueue');
+  return allItems.filter(item => item.type === type);
 };
 
 export const getNextSyncItem = async () => {
