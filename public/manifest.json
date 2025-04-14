@@ -3,9 +3,28 @@
   "short_name": "Brasilit",
   "description": "Sistema de vistorias técnicas para coberturas",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "any",
   "background_color": "#ffffff",
   "theme_color": "#2563eb",
+  "categories": ["business", "utilities"],
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tela principal do sistema"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nova Vistoria",
+      "url": "/new-inspection",
+      "description": "Iniciar nova vistoria"
+    }
+  ],
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
